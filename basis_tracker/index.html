@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LNG Flow Dashboard</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Vendor scripts -->
+  <script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+    integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+    integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+    integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+    crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useMemo, useReducer } = React;
+
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+const CARGO_M3    = 160000;
+const M3_MMBTU    = 23.4;
+const CARGO_MMBTU = 3_400_000;  // 3.4 TBtu fixed cargo size
+const PORT_USD    = 180000;
+
+// Visual coords in 1000×510 viewBox
+const SOURCES = [
+  { id:'us_gulf',   name:'US Gulf Coast',       short:'US Gulf',    fobCost:5.05, color:'#60a5fa', x:175, y:265 },
+  { id:'qatar',     name:'Qatar (Ras Laffan)',   short:'Qatar',      fobCost:3.50, color:'#f472b6', x:593, y:237 },
+  { id:'australia', name:'NW Australia',         short:'Australia',  fobCost:6.20, color:'#fb923c', x:755, y:365 },
+  { id:'nigeria',   name:'Nigeria (NLNG)',        short:'Nigeria',    fobCost:4.00, color:'#4ade80', x:468, y:308 },
+  { id:'algeria',   name:'Algeria (Arzew)',       short:'Algeria',    fobCost:3.50, color:'#a78bfa', x:458, y:185 },
+];
+const DESTINATIONS = [
+  { id:'nw_europe', name:'NW Europe', x:460, y:118 },
+  { id:'china',     name:'China',     x:808, y:212 },
+];
+const ROUTES = [
+  // US Gulf
+  { src:'us_gulf',   dst:'nw_europe', days:22, via:'Atlantic',       path:null },
+  { src:'us_gulf',   dst:'china',     days:70, via:'Cape of GH',     path:null },
+  // Qatar
+  { src:'qatar',     dst:'nw_europe', days:30, via:'Suez Canal',     path:null },
+  { src:'qatar',     dst:'china',     days:24, via:'Indian Ocean',   path:null },
+  // Australia
+  { src:'australia', dst:'nw_europe', days:50, via:'Cape of GH',     path:null },
+  { src:'australia', dst:'china',     days:12, via:'Pacific',        path:null },
+  // Nigeria
+  { src:'nigeria',   dst:'nw_europe', days:20, via:'Atlantic',       path:null },
+  { src:'nigeria',   dst:'china',     days:45, via:'Cape of GH',     path:null },
+  // Algeria
+  { src:'algeria',   dst:'nw_europe', days: 8, via:'Mediterranean',  path:null },
+  { src:'algeria',   dst:'china',     days:40, via:'Suez/Indian O.', path:null },
+];
+
+// ─────────────────────────────────────────────
+// GEO COORDS (lon, lat) for D3 projection
+// ─────────────────────────────────────────────
+const SOURCE_GEO = {
+  us_gulf:   [-90.5, 29.5],
+  qatar:     [ 51.5, 25.8],
+  australia: [116.7,-20.7],
+  nigeria:   [  6.4,  4.5],
+  algeria:   [  0.5, 36.7],
+};
+const DEST_GEO = {
+  nw_europe: [  4.5, 52.0],
+  china:     [121.5, 31.0],
+};
+// Great-circle waypoints per route (avoid landmasses)
+const ROUTE_WAYPOINTS = {
+  'us_gulf→nw_europe':  [[-90.5,29.5],[-65,35],[-35,45],[4.5,52]],
+  'us_gulf→china':      [[-90.5,29.5],[-60,10],[-15,-35],[20,-38],[55,-30],[85,-18],[110,5],[121.5,31]],
+  'qatar→nw_europe':    [[51.5,25.8],[44,13],[36,14],[33,30],[25,36],[15,40],[4.5,52]],
+  'qatar→china':        [[51.5,25.8],[62,22],[76,15],[90,10],[105,14],[115,22],[121.5,31]],
+  'australia→china':    [[116.7,-20.7],[120,-12],[122,-2],[123,10],[121.5,31]],
+  'australia→nw_europe':[[116.7,-20.7],[95,-38],[55,-42],[20,-38],[15,0],[10,22],[4.5,52]],
+  'nigeria→nw_europe':  [[6.4,4.5],[4,12],[0,20],[-5,28],[-2,36],[4.5,52]],
+  'nigeria→china':      [[6.4,4.5],[12,-5],[28,-25],[45,-38],[68,-32],[90,-18],[108,4],[118,18],[121.5,31]],
+  'algeria→nw_europe':  [[0.5,36.7],[2,42],[3.5,47],[4.5,52]],
+  'algeria→china':      [[0.5,36.7],[18,34],[35,28],[52,22],[70,18],[90,14],[110,22],[121.5,31]],
+};
+
+// Key straits (lon, lat)
+const STRAITS_GEO = [
+  { label:'SUEZ',      lon: 32.5, lat: 30.0 },
+  { label:'HORMUZ',    lon: 56.5, lat: 26.5 },
+  { label:'MALACCA',   lon:103.5, lat:  2.5 },
+  { label:'BAB-EL-MANDEB', lon: 43.0, lat: 12.5 },
+  { label:"CAPE OF\nGOOD HOPE", lon: 18.5, lat:-34.5 },
+];
+
+// Country labels (lon, lat, name)
+const COUNTRY_LABELS = [
+  { lon:-98,  lat: 38,   name:'UNITED STATES' },
+  { lon:-55,  lat:-10,   name:'BRAZIL' },
+  { lon: 20,  lat: 55,   name:'RUSSIA' },
+  { lon: 10,  lat: 20,   name:'AFRICA' },
+  { lon: 80,  lat: 25,   name:'INDIA' },
+  { lon:105,  lat: 35,   name:'CHINA' },
+  { lon:134,  lat:-25,   name:'AUSTRALIA' },
+  { lon: 10,  lat: 50,   name:'EUROPE' },
+  { lon: 45,  lat: 25,   name:'ARABIA' },
+  { lon:-30,  lat: 35,   name:'N. ATLANTIC' },
+  { lon: 75,  lat:-20,   name:'INDIAN OCEAN' },
+  { lon:160,  lat:  0,   name:'PACIFIC' },
+];
+
+
+// ─────────────────────────────────────────────
+// ECONOMICS
+// ─────────────────────────────────────────────
+function calcEcon(fobCost, destPrice, days, charterRate, boiloffPct) {
+  // boiloffPct is expressed as %/day (e.g. 0.085 = 0.085%/day)
+  const dailyBoilMmbtu  = CARGO_MMBTU * (boiloffPct / 100);
+  const totalBoilMmbtu  = dailyBoilMmbtu * days;
+  const deliveredMmbtu  = CARGO_MMBTU - totalBoilMmbtu;
+  // Shipping fee = charter hire + boil-off value + port costs
+  const hireCost        = charterRate * days;                   // $/day × days
+  const boilCost        = totalBoilMmbtu * destPrice;           // mmbtu lost × dest price
+  const totalShip       = hireCost + boilCost + PORT_USD;
+  const shipPerMmbtu    = totalShip / CARGO_MMBTU;
+  const revenue         = destPrice * deliveredMmbtu;
+  const totalCost       = fobCost * CARGO_MMBTU + hireCost + PORT_USD;
+  const totalMargin     = revenue - totalCost;
+  const marginPerMmbtu  = totalMargin / deliveredMmbtu;
+  return {
+    hireCost, boilCost, portCost:PORT_USD, totalShip,
+    shipPerMmbtu, deliveredMmbtu, totalBoilMmbtu, dailyBoilMmbtu,
+    totalMargin, marginPerMmbtu,
+    viable:   marginPerMmbtu >  0.3,
+    marginal: marginPerMmbtu > -0.3 && marginPerMmbtu <= 0.3,
+  };
+}
+
+const fmt2  = n => typeof n==='number' ? n.toFixed(2) : '—';
+const fmtM  = n => `$${(n/1e6).toFixed(2)}M`;
+const srcMap = Object.fromEntries(SOURCES.map(s=>[s.id,s]));
+const dstMap = Object.fromEntries(DESTINATIONS.map(d=>[d.id,d]));
+
+// ─────────────────────────────────────────────
+// 3-WAY PRICE REDUCER
+// pinned = last 2 manually edited fields
+// ─────────────────────────────────────────────
+function priceReducer(state, action) {
+  const { jkm, ttf, spread, pinned } = state;
+  switch(action.type) {
+    case 'SET_JKM': {
+      const v = action.value;
+      if (pinned[1]==='ttf' || pinned[0]==='ttf')
+        return { jkm:v, ttf, spread:+(v-ttf).toFixed(3), pinned:['jkm','ttf'] };
+      return { jkm:v, ttf:+(v-spread).toFixed(3), spread, pinned:['jkm','spread'] };
+    }
+    case 'SET_TTF': {
+      const v = action.value;
+      if (pinned[0]==='jkm' || pinned[1]==='jkm')
+        return { jkm, ttf:v, spread:+(jkm-v).toFixed(3), pinned:['jkm','ttf'] };
+      return { jkm:+(v+spread).toFixed(3), ttf:v, spread, pinned:['ttf','spread'] };
+    }
+    case 'SET_SPREAD': {
+      const v = action.value;
+      if (pinned[0]==='ttf' || pinned[1]==='ttf')
+        return { jkm:+(ttf+v).toFixed(3), ttf, spread:v, pinned:['ttf','spread'] };
+      return { jkm, ttf:+(jkm-v).toFixed(3), spread:v, pinned:['jkm','spread'] };
+    }
+    default: return state;
+  }
+}
+
+// ─────────────────────────────────────────────
+// NumInput (generic)
+// ─────────────────────────────────────────────
+function NumInput({ label, value, onChange, unit='$/mmbtu' }) {
+  return (
+    <div className="num-input">
+      <div className="num-label">{label}</div>
+      <div className="num-row">
+        <input type="number" step="0.05" value={value} onChange={e=>onChange(parseFloat(e.target.value)||0)}/>
+        <span className="num-unit">{unit}</span>
+      </div>
+    </div>
+  );
+}
+
+
+// ─────────────────────────────────────────────
+// WORLD MAP — D3 + TopoJSON
+// ─────────────────────────────────────────────
+function WorldMap({ routeData, hoveredRoute, onHover }) {
+  const svgRef = React.useRef(null);
+  const [ready, setReady] = React.useState(false);
+  const [proj, setProj] = React.useState(null);
+  const [countries, setCountries] = React.useState([]);
+  const [dims, setDims] = React.useState({ w: 800, h: 500 });
+
+  function waypointsToPath(pts, p) {
+    if (!p || !pts || pts.length < 2) return '';
+    const projected = pts.map(([lon, lat]) => p([lon, lat])).filter(Boolean);
+    if (projected.length < 2) return '';
+    if (projected.length === 2) {
+      return 'M'+projected[0][0]+','+projected[0][1]+' L'+projected[1][0]+','+projected[1][1];
+    }
+    let d = 'M'+projected[0][0].toFixed(1)+','+projected[0][1].toFixed(1);
+    for (let i = 0; i < projected.length - 1; i++) {
+      const p0 = projected[Math.max(i-1,0)];
+      const p1 = projected[i];
+      const p2 = projected[i+1];
+      const p3 = projected[Math.min(i+2,projected.length-1)];
+      const cp1x = p1[0]+(p2[0]-p0[0])/6;
+      const cp1y = p1[1]+(p2[1]-p0[1])/6;
+      const cp2x = p2[0]-(p3[0]-p1[0])/6;
+      const cp2y = p2[1]-(p3[1]-p1[1])/6;
+      d += ' C'+cp1x.toFixed(1)+','+cp1y.toFixed(1)+' '+cp2x.toFixed(1)+','+cp2y.toFixed(1)+' '+p2[0].toFixed(1)+','+p2[1].toFixed(1);
+    }
+    return d;
+  }
+
+  React.useEffect(() => {
+    const container = svgRef.current && svgRef.current.parentElement;
+    if (!container) return;
+    const w = container.clientWidth || 800;
+    const h = container.clientHeight || 500;
+    setDims({ w, h });
+    const projection = d3.geoNaturalEarth1().scale(w/5.8).translate([w/2, h/2]);
+    setProj(() => projection);
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+      .then(r => r.json())
+      .then(world => {
+        const features = topojson.feature(world, world.objects.countries).features;
+        const pathFn = d3.geoPath().projection(projection);
+        const drawn = features.map(f => ({ id: f.id, d: pathFn(f) })).filter(c => c.d);
+        setCountries(drawn);
+        setReady(true);
+      })
+      .catch(() => setReady(true));
+  }, []);
+
+  const routeWithPaths = routeData.map(r => ({
+    ...r,
+    projPath: proj ? waypointsToPath(ROUTE_WAYPOINTS[r.key] || [], proj) : ''
+  }));
+
+  const px = (lonlat) => proj ? proj(lonlat) : null;
+
+  const STRAITS_GEO = [
+    { label:'SUEZ', lon:32.5, lat:30.5 },
+    { label:'HORMUZ', lon:56.5, lat:26.5 },
+    { label:'MALACCA', lon:103.5, lat:2.5 },
+    { label:'BAB-EL-MANDEB', lon:43.5, lat:12.5 },
+    { label:'CAPE OF GH', lon:18.5, lat:-34.5 },
+  ];
+
+  return (
+    <svg ref={svgRef} style={{width:'100%',height:'100%',display:'block'}}>
+      <defs>
+        <radialGradient id="ocean-grad" cx="50%" cy="40%" r="65%">
+          <stop offset="0%" stopColor="#041528"/>
+          <stop offset="100%" stopColor="#020b17"/>
+        </radialGradient>
+        <filter id="glow-sm" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-lg" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="4" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        {routeWithPaths.filter(r=>r.viable&&r.preferred&&r.projPath).map(r=>(
+          <path key={'def-'+r.key} id={'rp-'+r.key.replace(/[^a-z0-9]/gi,'_')} d={r.projPath}/>
+        ))}
+      </defs>
+
+      <rect x="0" y="0" width={dims.w} height={dims.h} fill="url(#ocean-grad)"/>
+
+      {ready && proj && (()=>{
+        const graticule = d3.geoGraticule().step([30,30])();
+        const pathFn = d3.geoPath().projection(proj);
+        return <path d={pathFn(graticule)||''} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5"/>;
+      })()}
+
+      {ready && proj && (()=>{
+        const eq = {type:'LineString', coordinates: d3.range(-180,181,2).map(lon=>[lon,0])};
+        const pathFn = d3.geoPath().projection(proj);
+        return <path d={pathFn(eq)||''} fill="none" stroke="rgba(60,130,220,0.18)" strokeWidth="0.8"/>;
+      })()}
+
+      {countries.map((c,i)=>(
+        <path key={c.id+'-'+i} d={c.d} fill="#152a42" stroke="#1e3d5c" strokeWidth="0.5"/>
+      ))}
+
+      {ready && proj && STRAITS_GEO.map(s=>{
+        const pt = px([s.lon,s.lat]);
+        if (!pt) return null;
+        return (
+          <g key={s.label} transform={'translate('+pt[0]+','+pt[1]+')'}>
+            <line x1="-6" y1="0" x2="6" y2="0" stroke="rgba(80,160,220,0.38)" strokeWidth="1.2"/>
+            <text y="-5" textAnchor="middle" fontSize="7" fill="rgba(100,165,215,0.55)"
+              fontFamily="Space Grotesk,sans-serif" fontStyle="italic">{s.label}</text>
+          </g>
+        );
+      })}
+
+      {routeWithPaths.filter(r=>!r.viable&&!r.marginal&&r.projPath).map(r=>(
+        <path key={r.key} d={r.projPath} fill="none" strokeLinecap="round"
+          stroke={srcMap[r.src].color} strokeWidth="0.8" strokeDasharray="2,8" opacity="0.14"
+          style={{cursor:'pointer'}}
+          onMouseEnter={()=>onHover(r.key)} onMouseLeave={()=>onHover(null)}/>
+      ))}
+
+      {routeWithPaths.filter(r=>(r.viable||r.marginal)&&r.projPath).map(r=>{
+        const isHov = hoveredRoute===r.key;
+        const isPref = r.preferred;
+        const sw = isPref?(isHov?3:2):(isHov?2:1.3);
+        const da = isPref?'none':'7,5';
+        const op = isPref?(isHov?1:0.88):(isHov?0.8:0.48);
+        const safeKey = r.key.replace(/[^a-z0-9]/gi,'_');
+        return (
+          <g key={r.key}>
+            <path d={r.projPath} fill="none" strokeLinecap="round"
+              stroke={srcMap[r.src].color} strokeWidth={sw} strokeDasharray={da} opacity={op}
+              style={{cursor:'pointer',transition:'stroke-width 0.12s,opacity 0.12s'}}
+              onMouseEnter={()=>onHover(r.key)} onMouseLeave={()=>onHover(null)}/>
+            {isPref&&r.viable&&(
+              <circle r="3.5" fill={srcMap[r.src].color} opacity="0.95" filter="url(#glow-sm)">
+                <animateMotion dur={Math.max(3,r.days/5).toFixed(1)+'s'} repeatCount="indefinite">
+                  <mpath xlinkHref={'#rp-'+safeKey}/>
+                </animateMotion>
+              </circle>
+            )}
+          </g>
+        );
+      })}
+
+      {ready&&proj&&DESTINATIONS.map(d=>{
+        const pt = px(DEST_GEO[d.id]);
+        if (!pt) return null;
+        return (
+          <g key={d.id} transform={'translate('+pt[0]+','+pt[1]+')'}>
+            <polygon points="0,-8 8,0 0,8 -8,0" fill="#091523" stroke="#3a7aaa" strokeWidth="1.5" filter="url(#glow-sm)"/>
+            <text y="20" textAnchor="middle" fontSize="9" fontWeight="600"
+              fontFamily="Space Grotesk,sans-serif" fill="#4a8aba">{d.name}</text>
+          </g>
+        );
+      })}
+
+      {ready&&proj&&SOURCES.map(src=>{
+        const pt = px(SOURCE_GEO[src.id]);
+        if (!pt) return null;
+        const viable = routeData.filter(r=>r.src===src.id).some(r=>r.viable);
+        return (
+          <g key={src.id} transform={'translate('+pt[0]+','+pt[1]+')'}>
+            {viable&&(
+              <circle r="11" fill={src.color} opacity="0.08">
+                <animate attributeName="r" values="10;18;10" dur="2.8s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.08;0.02;0.08" dur="2.8s" repeatCount="indefinite"/>
+              </circle>
+            )}
+            <circle r="6" fill={src.color} opacity={viable?1:0.3}
+              stroke={viable?'rgba(255,255,255,0.45)':'#1a3a58'} strokeWidth="1.2"
+              filter={viable?'url(#glow-sm)':''}/>
+            <text y="20" textAnchor="middle" fontSize="8.5" fontWeight="500"
+              fontFamily="Space Grotesk,sans-serif" fill={src.color}>{src.short}</text>
+          </g>
+        );
+      })}
+
+      {hoveredRoute&&ready&&proj&&(()=>{
+        const r = routeWithPaths.find(rd=>rd.key===hoveredRoute);
+        if (!r) return null;
+        const s=srcMap[r.src], d=dstMap[r.dst];
+        const spt=px(SOURCE_GEO[r.src]);
+        const dpt=px(DEST_GEO[r.dst]);
+        if (!spt||!dpt) return null;
+        const mx=Math.max(90,Math.min(dims.w-90,(spt[0]+dpt[0])/2));
+        const my=Math.max(38,Math.min(dims.h-60,Math.min(spt[1],dpt[1])-40));
+        const mc=r.viable?'#1fd17a':r.marginal?'#f0c040':'#ee5545';
+        return (
+          <g transform={'translate('+mx+','+my+')'} style={{pointerEvents:'none'}}>
+            <rect x="-92" y="-38" width="184" height="52" rx="5" fill="#060f1c" stroke="#173858"/>
+            <text y="-22" textAnchor="middle" fontSize="8.5" fill="#5b8fb5" fontFamily="Space Grotesk,sans-serif">
+              {s.name} → {d.name}
+            </text>
+            <text y="-9" textAnchor="middle" fontSize="8.5" fill="#5b8fb5" fontFamily="Space Grotesk,sans-serif">
+              {r.via} · {r.days} days
+            </text>
+            <text y="8" textAnchor="middle" fontSize="10" fill={mc} fontFamily="JetBrains Mono,monospace" fontWeight="600">
+              Margin: ${fmt2(r.marginPerMmbtu)}/mmbtu
+            </text>
+          </g>
+        );
+      })()}
+
+      <g transform={'translate('+(dims.w/2)+','+(dims.h-14)+')'}>
+        <rect x="-180" y="-12" width="360" height="22" rx="11" fill="rgba(6,15,28,0.88)" stroke="#0f2840"/>
+        <text x="-165" y="4" fontSize="9" fill="#1fd17a" fontFamily="Space Grotesk,sans-serif">── Solid = preferred</text>
+        <text x="-50" y="4" fontSize="9" fill="#f0c040" fontFamily="Space Grotesk,sans-serif">- - Secondary</text>
+        <text x="55" y="4" fontSize="9" fill="#1fd17a" fontFamily="Space Grotesk,sans-serif">● Viable</text>
+        <text x="100" y="4" fontSize="9" fill="#f0c040" fontFamily="Space Grotesk,sans-serif">◐ Marginal</text>
+        <text x="145" y="4" fontSize="9" fill="#2e5878" fontFamily="Space Grotesk,sans-serif">○ Unviable</text>
+      </g>
+    </svg>
+  );
+}
+
+
+// ─────────────────────────────────────────────
+// LEFT PANEL
+// ─────────────────────────────────────────────
+function PricePanel({ prices, dispatch, sourceCosts, setSourceCosts, routeData }) {
+  const { jkm, ttf, spread, pinned } = prices;
+  const autoField = ['jkm','ttf','spread'].find(f=>!pinned.includes(f));
+  return (
+    <div className="panel left-panel">
+      <div className="panel-section">
+        <div className="section-title">Market Prices</div>
+        <div className="price-trio">
+          {/* JKM */}
+          <div className="price-field">
+            <div className="price-label">
+              JKM {autoField==='jkm' && <span className="auto-badge">auto</span>}
+            </div>
+            <div className="price-input-wrap">
+              <input type="number" step="0.05" value={jkm}
+                className={autoField==='jkm'?'auto-calc':''}
+                onChange={e=>dispatch({type:'SET_JKM',value:parseFloat(e.target.value)||0})}/>
+              <span className="p-unit">$/m</span>
+            </div>
+          </div>
+          {/* TTF */}
+          <div className="price-field">
+            <div className="price-label">
+              TTF {autoField==='ttf' && <span className="auto-badge">auto</span>}
+            </div>
+            <div className="price-input-wrap">
+              <input type="number" step="0.05" value={ttf}
+                className={autoField==='ttf'?'auto-calc':''}
+                onChange={e=>dispatch({type:'SET_TTF',value:parseFloat(e.target.value)||0})}/>
+              <span className="p-unit">$/m</span>
+            </div>
+          </div>
+          {/* Spread — full width */}
+          <div className="price-field span2">
+            <div className="price-label">
+              JKM / TTF Basis {autoField==='spread' && <span className="auto-badge">auto</span>}
+            </div>
+            <div className="price-input-wrap">
+              <input type="number" step="0.05" value={spread}
+                className={autoField==='spread'?'auto-calc':''}
+                onChange={e=>dispatch({type:'SET_SPREAD',value:parseFloat(e.target.value)||0})}/>
+              <span className="p-unit">$/mmbtu</span>
+            </div>
+          </div>
+        </div>
+        <div className={`spread-pill ${spread>=0?'pos':'neg'}`}>
+          {spread>=0?'▲':'▼'} Asia {spread>=0?'prem':'disc'} {Math.abs(spread).toFixed(2)} $/mmbtu
+        </div>
+      </div>
+
+      <div className="panel-section">
+        <div className="section-title">FOB Supply Costs</div>
+        <div style={{fontSize:'8.5px',color:'var(--text3)',marginBottom:8,lineHeight:1.5}}>
+          Feed gas + liquefaction toll, all-in FOB load port
+        </div>
+        {SOURCES.map(src=>(
+          <NumInput key={src.id}
+            label={<><span className="dot" style={{background:src.color}}/> {src.name}</>}
+            value={sourceCosts[src.id]}
+            onChange={v=>setSourceCosts(p=>({...p,[src.id]:v}))}/>
+        ))}
+      </div>
+
+      <div className="panel-section">
+        <div className="section-title">Shipping Cost Comparison</div>
+        <div style={{fontSize:'8.5px',color:'var(--text3)',marginBottom:8,lineHeight:1.4}}>
+          Freight = (charter rate × days) + (boil-off mmbtu × dest price) + port costs
+        </div>
+        {SOURCES.map(src=>{
+          const rEU = routeData.find(r=>r.src===src.id && r.dst==='nw_europe');
+          const rCN = routeData.find(r=>r.src===src.id && r.dst==='china');
+          const incr = rCN && rEU ? rCN.shipPerMmbtu - rEU.shipPerMmbtu : null;
+          return (
+            <div key={src.id} style={{marginBottom:10,paddingBottom:8,borderBottom:'1px solid var(--border)'}}>
+              <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:5}}>
+                <span className="dot" style={{background:src.color}}/>
+                <span style={{fontSize:9.5,color:src.color,fontWeight:600}}>{src.short}</span>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4}}>
+                {[['EU', rEU],['CN', rCN]].map(([tag, r])=> r ? (
+                  <div key={tag} style={{background:'var(--card)',borderRadius:4,padding:'5px 7px',border:'1px solid var(--border)'}}>
+                    <div style={{fontSize:8,color:'var(--text3)',marginBottom:3}}>→ {tag} · {r.days}d</div>
+                    {/* Formula rows */}
+                    <div style={{fontSize:7.5,color:'var(--text3)',fontFamily:'var(--mono)',lineHeight:1.7}}>
+                      <div style={{display:'flex',justifyContent:'space-between'}}>
+                        <span>hire</span><span style={{color:'var(--text2)'}}>{fmtM(r.hireCost)}</span>
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between'}}>
+                        <span>BOG</span><span style={{color:'var(--text2)'}}>{fmtM(r.boilCost)}</span>
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between'}}>
+                        <span>port</span><span style={{color:'var(--text2)'}}>{fmtM(r.portCost)}</span>
+                      </div>
+                    </div>
+                    <div style={{borderTop:'1px solid var(--border)',marginTop:3,paddingTop:3,display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+                      <span style={{fontSize:7.5,color:'var(--text3)'}}>total</span>
+                      <span style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--text)',fontWeight:600}}>${fmt2(r.shipPerMmbtu)}<span style={{fontSize:7,color:'var(--text3)',fontWeight:400}}>/m</span></span>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={tag} style={{background:'var(--card)',borderRadius:4,padding:'5px 7px',border:'1px solid var(--border)'}}>
+                    <div style={{fontSize:8,color:'var(--text3)',marginBottom:2}}>→ {tag}</div>
+                    <div style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--text3)'}}>—</div>
+                  </div>
+                ))}
+              </div>
+              {incr !== null && (
+                <div style={{marginTop:4,display:'flex',alignItems:'center',gap:5}}>
+                  <span style={{fontSize:8,color:'var(--text3)'}}>Incremental (CN vs EU):</span>
+                  <span style={{fontFamily:'var(--mono)',fontSize:10,fontWeight:600,color:incr>0?'var(--red)':incr<0?'var(--green)':'var(--text3)'}}>
+                    {incr>0?'+':''}{fmt2(incr)} $/m
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// RIGHT PANEL
+// ─────────────────────────────────────────────
+function ScenarioCard({ label, route, accent, charterRate, boiloffPct }) {
+  if (!route) return (
+    <div style={{flex:1,background:'var(--card)',borderRadius:5,padding:'8px',border:'1px solid var(--border)'}}>
+      <div style={{fontSize:9,color:'var(--text3)',marginBottom:4,fontWeight:700,letterSpacing:'0.1em'}}>{label}</div>
+      <div style={{fontSize:10,color:'var(--text3)',textAlign:'center',padding:'12px 0'}}>No route</div>
+    </div>
+  );
+  const mc  = route.viable?'var(--green)':route.marginal?'var(--yellow)':'var(--red)';
+  const bg  = route.viable?'var(--green-dim)':route.marginal?'var(--yellow-dim)':'var(--red-dim)';
+
+  // Shipping fee breakdown rows
+  const shipRows = [
+    { label:'Charter rate', formula:`$${(charterRate/1000).toFixed(0)}k/d × ${route.days}d`, value: fmtM(route.hireCost), indent:false },
+    { label:'Boil-off loss', formula:`${(route.totalBoilMmbtu/1000).toFixed(0)}k mmbtu`, value: fmtM(route.boilCost), indent:false },
+    { label:'Port costs', formula:'load + discharge', value: fmtM(route.portCost), indent:false },
+  ];
+
+  return (
+    <div style={{flex:1,background:'var(--card)',borderRadius:5,border:`1px solid ${route.preferred?accent:'var(--border)'}`,overflow:'hidden'}}>
+      {/* Header */}
+      <div style={{background:route.preferred?`rgba(${accent.replace('#','').match(/../g).map(x=>parseInt(x,16)).join(',')},0.12)`:'transparent',padding:'6px 8px',borderBottom:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <span style={{fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:route.preferred?'var(--text)':'var(--text2)'}}>{label}</span>
+        {route.preferred && <span style={{fontSize:8,color:accent,fontWeight:600}}>● PREFERRED</span>}
+      </div>
+
+      <div style={{padding:'6px 8px'}}>
+        {/* Route meta */}
+        {[['Via', route.via],['Voyage days', `${route.days} days`],['Delivered', `${(route.deliveredMmbtu/1e6).toFixed(3)}M mmbtu`]].map(([k,v])=>(
+          <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'2px 0',borderBottom:'1px solid rgba(15,40,64,0.5)',fontSize:9.5}}>
+            <span style={{color:'var(--text2)'}}>{k}</span>
+            <span style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--text)'}}>{v}</span>
+          </div>
+        ))}
+
+        {/* Shipping fee breakdown */}
+        <div style={{marginTop:7,marginBottom:3}}>
+          <div style={{fontSize:8,fontWeight:700,letterSpacing:'0.12em',color:'var(--text3)',marginBottom:4,textTransform:'uppercase'}}>Shipping Fee</div>
+          <div style={{background:'rgba(9,21,35,0.7)',borderRadius:4,border:'1px solid var(--border)',overflow:'hidden'}}>
+            {shipRows.map(({label:k,formula,value})=>(
+              <div key={k} style={{display:'flex',alignItems:'center',padding:'3px 6px',borderBottom:'1px solid rgba(15,40,64,0.6)',gap:4}}>
+                <span style={{fontSize:8.5,color:'var(--text2)',flex:'0 0 70px'}}>{k}</span>
+                <span style={{fontSize:8,color:'var(--text3)',flex:1,fontFamily:'var(--mono)'}}>{formula}</span>
+                <span style={{fontFamily:'var(--mono)',fontSize:9.5,color:'var(--text)',minWidth:44,textAlign:'right'}}>{value}</span>
+              </div>
+            ))}
+            {/* Total shipping fee */}
+            <div style={{display:'flex',alignItems:'center',padding:'4px 6px',background:'rgba(30,58,100,0.25)',gap:4}}>
+              <span style={{fontSize:8.5,fontWeight:700,color:'#4a9ad4',flex:'0 0 70px'}}>Total freight</span>
+              <span style={{fontSize:8,color:'var(--text3)',flex:1,fontFamily:'var(--mono)'}}>= {fmtM(route.totalShip)}</span>
+              <span style={{fontFamily:'var(--mono)',fontSize:10,fontWeight:700,color:'#4a9ad4',minWidth:44,textAlign:'right'}}>${fmt2(route.shipPerMmbtu)}<span style={{fontSize:7,fontWeight:400,color:'var(--text3)'}}>/m</span></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Margin */}
+        <div style={{marginTop:5,background:bg,borderRadius:4,padding:'5px 7px',display:'flex',justifyContent:'space-between'}}>
+          <span style={{fontSize:9.5,color:mc,fontWeight:600}}>Margin/mmbtu</span>
+          <span style={{fontFamily:'var(--mono)',fontSize:11,fontWeight:700,color:mc}}>${fmt2(route.marginPerMmbtu)}</span>
+        </div>
+        <div style={{marginTop:3,display:'flex',justifyContent:'space-between',fontSize:9.5}}>
+          <span style={{color:'var(--text2)'}}>Voyage P&amp;L</span>
+          <span style={{fontFamily:'var(--mono)',fontSize:10,color:mc}}>{fmtM(route.totalMargin)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RightPanel({ charterRate, setCharterRate, boiloffPct, setBoiloffPct, routeData, thesis, setThesis }) {
+  const [selSrc, setSelSrc] = useState('us_gulf');
+  const src = srcMap[selSrc];
+  const rEU = routeData.find(r=>r.src===selSrc && r.dst==='nw_europe');
+  const rCN = routeData.find(r=>r.src===selSrc && r.dst==='china');
+
+  return (
+    <div className="panel right-panel">
+      {/* Cargo assumptions at top */}
+      <div className="panel-section">
+        <div className="section-title">Cargo Assumptions</div>
+        {[['Cargo size','3.4 TBtu'],['Energy content',`${(CARGO_MMBTU/1e6).toFixed(1)}M mmbtu`],['Vessel size',`~${CARGO_M3.toLocaleString()} m³`],['Port costs',`$${(PORT_USD/1000).toFixed(0)}k/voyage`]].map(([k,v])=>(
+          <div key={k} className="result-row"><span style={{fontSize:10}}>{k}</span><span className="result-val" style={{fontSize:10}}>{v}</span></div>
+        ))}
+      </div>
+
+      {/* Shipping inputs */}
+      <div className="panel-section">
+        <div className="section-title">Shipping Parameters</div>
+        <NumInput label="Daily Charter Rate (TFDE)" value={charterRate} onChange={setCharterRate} unit="$/day"/>
+        <NumInput label="Boil-off Rate (SIGTTO Form B)" value={boiloffPct} onChange={setBoiloffPct} unit="%/day"/>
+        <div style={{fontSize:'8px',color:'var(--text3)',lineHeight:1.6}}>
+          Shipping fee = (charter rate × days) + (boil-off mmbtu × dest price) + port costs.<br/>
+          BOG on 3.4 TBtu cargo: {'{'}(3,400,000 × boiloff%/day) × days{'}'} mmbtu lost.
+        </div>
+      </div>
+
+      {/* Dual scenario */}
+      <div className="panel-section">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+          <div className="section-title" style={{marginBottom:0}}>Scenario Analysis</div>
+          <select value={selSrc} onChange={e=>setSelSrc(e.target.value)}
+            style={{background:'var(--card)',border:'1px solid var(--border)',color:'var(--text)',fontFamily:'var(--ui)',fontSize:10,padding:'3px 5px',borderRadius:4,outline:'none'}}>
+            {SOURCES.map(s=><option key={s.id} value={s.id}>{s.short}</option>)}
+          </select>
+        </div>
+        <div style={{display:'flex',gap:6}}>
+          <ScenarioCard label="NW EUROPE" route={rEU} accent={src.color} charterRate={charterRate} boiloffPct={boiloffPct}/>
+          <ScenarioCard label="CHINA" route={rCN} accent={src.color} charterRate={charterRate} boiloffPct={boiloffPct}/>
+        </div>
+      </div>
+
+      {/* All routes summary */}
+      <div className="panel-section">
+        <div className="section-title">All Routes — Margin/mmbtu</div>
+        <div className="routes-table">
+          {routeData.map(rd=>{
+            const s=srcMap[rd.src], d=dstMap[rd.dst];
+            const rc=rd.viable?'viable':rd.marginal?'marginal':'not-viable';
+            return (
+              <div key={rd.key} className={`route-row ${rc}`}>
+                <div className="route-label">
+                  <span className="dot" style={{background:s.color}}/>
+                  {s.short} → {d.name}
+                  <span className="route-days">{rd.days}d</span>
+                  {rd.preferred && <span style={{fontSize:8,color:'var(--text3)'}}>●</span>}
+                </div>
+                <div className="route-margin">${fmt2(rd.marginPerMmbtu)}</div>
+                <div className={`route-status ${rc}`}>{rd.viable?'●':rd.marginal?'◐':'○'}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="panel-section">
+        <div className="section-title">Trading Thesis</div>
+        <textarea className="thesis-area" rows="4"
+          placeholder="Market view, arbitrage rationale, price outlook..."
+          value={thesis} onChange={e=>setThesis(e.target.value)}/>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// APP
+// ─────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "jkm": 12.0,
+  "ttf": 10.5,
+  "charterRate": 65000,
+  "boiloffPct": 0.085
+}/*EDITMODE-END*/;
+
+function App() {
+  const _useTweaks    = window.useTweaks    || (d => [d, ()=>{}]);
+  const _TweaksPanel  = window.TweaksPanel  || (({children})=>null);
+  const _TweakSection = window.TweakSection || (({children})=>null);
+  const _TweakSlider  = window.TweakSlider  || (()=>null);
+
+  const [tweaks] = _useTweaks(TWEAK_DEFAULTS);
+
+  const [prices, dispatch] = useReducer(priceReducer, {
+    jkm: TWEAK_DEFAULTS.jkm, ttf: TWEAK_DEFAULTS.ttf,
+    spread: +(TWEAK_DEFAULTS.jkm - TWEAK_DEFAULTS.ttf).toFixed(3),
+    pinned: ['jkm','ttf'],
+  });
+
+  const [charterRate, setCharterRate] = useState(TWEAK_DEFAULTS.charterRate);
+  const [boiloffPct,  setBoiloffPct]  = useState(TWEAK_DEFAULTS.boiloffPct);
+  const [sourceCosts, setSourceCosts] = useState(Object.fromEntries(SOURCES.map(s=>[s.id,s.fobCost])));
+  const [hoveredRoute, onHover]       = useState(null);
+  const [thesis, setThesis]           = useState('');
+
+  React.useEffect(()=>{ if(tweaks.jkm)         dispatch({type:'SET_JKM',value:tweaks.jkm}); },         [tweaks.jkm]);
+  React.useEffect(()=>{ if(tweaks.ttf)         dispatch({type:'SET_TTF',value:tweaks.ttf}); },         [tweaks.ttf]);
+  React.useEffect(()=>{ if(tweaks.charterRate) setCharterRate(tweaks.charterRate); },                   [tweaks.charterRate]);
+  React.useEffect(()=>{ if(tweaks.boiloffPct)  setBoiloffPct(tweaks.boiloffPct);  },                   [tweaks.boiloffPct]);
+
+  const dstPrice = { nw_europe: prices.ttf, china: prices.jkm * 0.97 };
+
+  const routeData = useMemo(()=>{
+    const raw = ROUTES.map(rt=>{
+      const econ = calcEcon(sourceCosts[rt.src], dstPrice[rt.dst]||prices.jkm, rt.days, charterRate, boiloffPct);
+      return { ...rt, ...econ, key:`${rt.src}→${rt.dst}` };
+    });
+    SOURCES.forEach(src=>{
+      const pair = raw.filter(r=>r.src===src.id);
+      if (pair.length < 2) { pair.forEach(r=>r.preferred=true); return; }
+      const best = pair.reduce((a,b)=>a.marginPerMmbtu>b.marginPerMmbtu?a:b);
+      pair.forEach(r=>{ r.preferred = r.key===best.key; });
+    });
+    return raw;
+  }, [prices.jkm, prices.ttf, charterRate, boiloffPct, sourceCosts]);
+
+  const viableCount = routeData.filter(r=>r.viable).length;
+
+  return (
+    <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+      <header className="header">
+        <div className="header-left">
+          <span style={{color:'#3b9eff',fontSize:16}}>⬡</span>
+          <span className="header-title">LNG FLOW DASHBOARD</span>
+          <span className="header-sub">Global Arbitrage Intelligence</span>
+        </div>
+        <div className="header-right">
+          <span style={{fontSize:10,color:'var(--text3)',fontFamily:'var(--mono)'}}>
+            <span style={{color:'var(--green)'}}>●</span> {viableCount}/{routeData.length} routes economically viable
+          </span>
+          <span className="live-badge">LIVE</span>
+          <span className="timestamp">26 APR 2026</span>
+        </div>
+      </header>
+
+      <div className="main">
+        <PricePanel
+          prices={prices} dispatch={dispatch}
+          sourceCosts={sourceCosts} setSourceCosts={setSourceCosts}
+          routeData={routeData}/>
+
+        <div className="map-container">
+          <WorldMap routeData={routeData} hoveredRoute={hoveredRoute} onHover={onHover}/>
+          <div className="map-legend">
+            <span style={{color:'var(--text2)'}}>── Solid = preferred destination</span>
+            <span style={{color:'var(--text3)'}}>- - Dashed = less preferred</span>
+            <span className="li-viable">● Viable</span>
+            <span className="li-marginal">◐ Marginal</span>
+            <span className="li-unviable">○ Unviable</span>
+          </div>
+        </div>
+
+        <RightPanel
+          charterRate={charterRate} setCharterRate={setCharterRate}
+          boiloffPct={boiloffPct}   setBoiloffPct={setBoiloffPct}
+          routeData={routeData}
+          thesis={thesis} setThesis={setThesis}/>
+      </div>
+
+      <_TweaksPanel>
+        <_TweakSection title="Market Prices">
+          <_TweakSlider label="JKM ($/mmbtu)" tweakKey="jkm" min={4} max={25} step={0.1}/>
+          <_TweakSlider label="TTF ($/mmbtu)" tweakKey="ttf" min={3} max={20} step={0.1}/>
+        </_TweakSection>
+        <_TweakSection title="Shipping">
+          <_TweakSlider label="Charter Rate ($/day)" tweakKey="charterRate" min={30000} max={150000} step={1000}/>
+          <_TweakSlider label="Boil-off %/day" tweakKey="boiloffPct" min={0.05} max={0.20} step={0.005}/>
+        </_TweakSection>
+      </_TweaksPanel>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+</body>
+</html>

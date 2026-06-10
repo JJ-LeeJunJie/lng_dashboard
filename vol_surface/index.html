@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SABR Volatility Surface &mdash; JKM / TTF</title>
+
+  <!-- Vendor -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <span class="brand-tag">LNG Derivatives Desk // Vol Surface v1.0</span>
+      <h1>SABR <span>VOLATILITY SURFACE</span> &mdash; JKM / TTF</h1>
+    </div>
+    <div class="header-meta">
+      <div class="live-badge"><div class="live-dot"></div> MODEL LIVE</div>
+      <div class="timestamp" id="timestamp"></div>
+    </div>
+  </header>
+
+  <div class="main-grid">
+
+    <!-- ── LEFT: controls ── -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">SABR Parameters</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--accent);">&beta; FIXED</span>
+        </div>
+        <div class="panel-body">
+
+          <div class="section-label">Vol Level</div>
+
+          <!-- sigma_0 -->
+          <div class="slider-row">
+            <div class="slider-header">
+              <span class="slider-label">&sigma;&#8320; Base ATM Vol</span>
+              <span class="slider-val" id="s0-out">40<span style="font-size:10px;color:var(--text-dim);">%</span></span>
+            </div>
+            <input type="range" id="s0" min="5" max="150" value="40" step="1">
+          </div>
+
+          <!-- Winter spike -->
+          <div class="slider-row">
+            <div class="slider-header">
+              <span class="slider-label">Winter Spike Amp</span>
+              <span class="slider-val" id="spike-out">11<span style="font-size:10px;color:var(--text-dim);">%</span></span>
+            </div>
+            <input type="range" id="spike" min="0" max="30" value="15" step="1">
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Smile Shape</div>
+
+          <!-- alpha -->
+          <div class="slider-row">
+            <div class="slider-header">
+              <span class="slider-label">&alpha; Vol-of-Vol</span>
+              <span class="slider-val" id="alpha-out">0.05</span>
+            </div>
+            <input type="range" id="alpha" min="0.05" max="0.70" value="0.30" step="0.01">
+          </div>
+
+          <!-- rho -->
+          <div class="slider-row">
+            <div class="slider-header">
+              <span class="slider-label">&rho; Skew (Fwd-Vol Corr)</span>
+              <span class="slider-val" id="rho-out" style="color:var(--gold);">+0.60</span>
+            </div>
+            <input type="range" id="rho" min="-0.70" max="0.70" value="0.60" step="0.01">
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Backbone</div>
+
+          <!-- beta -->
+          <div class="field">
+            <label>&beta; Elasticity <span class="unit">SABR regime</span></label>
+            <select id="beta">
+              <option value="0" selected>&beta; = 0 &middot; Normal SABR (JKM/TTF)</option>
+              <option value="0.5">&beta; = 0.5 &middot; Mixture</option>
+              <option value="1">&beta; = 1 &middot; Log-normal</option>
+            </select>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Slice Preview</div>
+
+          <!-- slice tenor -->
+          <div class="field">
+            <label>Smile Slice Tenor <span class="unit">delivery month</span></label>
+            <select id="slice-tenor"></select>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Methodology -->
+      <div class="methodology">
+        <p>
+          <strong>SABR (Hagan 2002):</strong> Stochastic &alpha; &beta; &rho; model. &sigma;&#8320; calibrated per tenor slice from ATM broker quote strip. Smile width compresses as 1/&radic;T. Samuelson effect drives vol term structure decay.<br><br>
+          <strong>JKM term structure:</strong> Winter seasonal bump centred on Jan&ndash;Mar delivery. Positive &rho; reflects call-side skew from supply shock asymmetry and cargo diversion optionality.<br><br>
+          <strong>&beta; = 0 (Normal SABR)</strong> recommended for JKM/TTF &mdash; handles near-zero and historically negative price regimes.
+        </p>
+      </div>
+
+    </div><!-- /left col -->
+
+    <!-- ── RIGHT: outputs ── -->
+    <div class="right-col">
+
+      <!-- Metric strip -->
+      <div class="metric-strip">
+        <div class="metric-card">
+          <div class="m-label">ATM Vol &middot; 1m</div>
+          <div class="m-val" id="m-atm1">&mdash;</div>
+          <div class="m-sub">front month</div>
+        </div>
+        <div class="metric-card winter">
+          <div class="m-label">ATM Vol &middot; 3m</div>
+          <div class="m-val" id="m-atm3">&mdash;</div>
+          <div class="m-sub">winter peak</div>
+        </div>
+        <div class="metric-card skew">
+          <div class="m-label">ATM Vol &middot; 12m</div>
+          <div class="m-val" id="m-atm12">&mdash;</div>
+          <div class="m-sub">long-dated</div>
+        </div>
+        <div class="metric-card smile">
+          <div class="m-label">25&Delta; Skew &middot; 3m</div>
+          <div class="m-val" id="m-skew">&mdash;</div>
+          <div class="m-sub">call &minus; put wing</div>
+        </div>
+      </div>
+
+      <!-- 3D Surface -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Implied Vol Surface &mdash; 3D</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">Drag to rotate &middot; Scroll to zoom</span>
+        </div>
+        <div style="padding:12px;">
+          <div id="surface-plot"></div>
+        </div>
+      </div>
+
+      <!-- Smile slice -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Smile Slice &mdash; Key Strikes</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--accent);" id="slice-label">3m tenor</span>
+        </div>
+        <div class="smile-grid" id="smile-grid"></div>
+      </div>
+
+      <!-- Term structure table -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">ATM Vol Term Structure</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">Samuelson decay + seasonal</span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <table id="ts-table">
+            <thead>
+              <tr>
+                <th style="text-align:left;">Tenor</th>
+                <th>ATM Vol</th>
+                <th>25&Delta; RR</th>
+                <th>25&Delta; Fly</th>
+                <th>Skew Dir</th>
+              </tr>
+            </thead>
+            <tbody id="ts-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /right col -->
+  </div><!-- /main-grid -->
+
+  <footer>
+    <p>SABR HAGAN 2002 // LNG DERIVATIVES DESK // INDICATIVE MID &mdash; NOT FOR EXECUTION</p>
+    <p id="footer-time"></p>
+  </footer>
+</div><!-- /container -->
+
+<script>
+// =========================================================
+// SABR ENGINE
+// =========================================================
+
+/**
+ * SABR implied vol — Hagan 2002.
+ * sigma0 and alpha in decimal vol units.
+ * Returns decimal vol.
+ *
+ * Normal SABR (beta=0): ATM vol = sigma0 exactly (no F division).
+ * Log-normal SABR (beta=1): ATM vol = sigma0 / F.
+ */
+function sabrVol(F, K, T, sigma0, alpha, rho, beta) {
+  if (T <= 0) return sigma0;
+  const eps = 1e-7;
+
+  if (Math.abs(F - K) < eps * F) {
+    // ATM closed form (Hagan eq. 2.17b)
+    // CLEAN FIX: backbone is always sigma0 for ATM by parameterisation.
+    // The O(T) correction is the only adjustment.
+    const b2 = Math.pow(1 - beta, 2);
+    const Fb  = Math.pow(Math.max(F, eps), 1 - beta);
+    const corr = 1 + (
+      b2 / 24 * sigma0 * sigma0 / Math.pow(Math.max(F, eps), 2 - 2 * beta)
+      + rho * beta * alpha * sigma0 / (4 * Fb)
+      + (2 - 3 * rho * rho) / 24 * alpha * alpha
+    ) * T;
+    return Math.max(0.01, sigma0 * corr);
+  }
+
+  // Off-ATM: standard Hagan formula
+  const logFK = Math.log(F / K);
+  const FKb   = Math.pow(Math.max(F * K, eps), (1 - beta) / 2);
+  const z     = alpha / Math.max(sigma0, eps) * FKb * logFK;
+  const disc  = Math.sqrt(Math.max(0, 1 - 2 * rho * z + z * z));
+  const chi   = Math.log(Math.max((disc + z - rho) / (1 - rho), 1e-10));
+  const zchi  = Math.abs(chi) < 1e-10 ? 1 : z / chi;
+
+  const backbone    = sigma0 / Math.max(FKb, eps);
+  const denom_shape = 1 + Math.pow(1 - beta, 2) / 24 * logFK * logFK
+                        + Math.pow(1 - beta, 4) / 1920 * Math.pow(logFK, 4);
+  const corr = 1 + (
+    Math.pow(1 - beta, 2) / 24 * sigma0 * sigma0 / Math.max(FKb * FKb, eps)
+    + rho * beta * alpha * sigma0 / (4 * Math.max(FKb, eps))
+    + (2 - 3 * rho * rho) / 24 * alpha * alpha
+  ) * T;
+
+  // Normalise ATM back to sigma0
+  const Fatm = Math.pow(Math.max(F, eps), 1 - beta);
+  return Math.max(0.01, backbone / denom_shape * zchi * corr * Fatm);
+}
+
+
+// ── Calendar helpers ──────────────────────────────────────
+const TODAY       = new Date();
+const TODAY_YEAR  = TODAY.getFullYear();
+const TODAY_MONTH = TODAY.getMonth(); // 0=Jan … 11=Dec
+
+function deliveryMonth(tm) {
+  return (TODAY_MONTH + tm) % 12;
+}
+
+// Winter = November(10), December(11), January(0), February(1)
+function isWinterMonth(calMonth) {
+  return calMonth === 10 || calMonth === 11 || calMonth === 0 || calMonth === 1;
+}
+
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function tenorLabel(tm) {
+  const m = (TODAY_MONTH + tm) % 12;
+  const y = TODAY_YEAR + Math.floor((TODAY_MONTH + tm) / 12);
+  return MONTH_NAMES[m] + String(y).slice(2);
+}
+
+
+// ── ATM term structure: Samuelson decay + calendar-aware winter bump ──
+// Returns sigma0 as a decimal (e.g. 0.45 = 45%).
+// Winter bump fires when delivery month is Nov, Dec, Jan or Feb.
+function atmForTenor(tm, s0base, spike) {
+  const kappa = 1.8;
+  const T     = tm / 12;
+  const base  = (s0base / 100) * (1 + 0.4 * Math.exp(-kappa * T));
+  const calM  = deliveryMonth(tm);
+  const winterCentres = [10, 11, 0, 1];
+  let minDist = 12;
+  for (const wc of winterCentres) {
+    let d = Math.abs(calM - wc);
+    if (d > 6) d = 12 - d;
+    if (d < minDist) minDist = d;
+  }
+  const sea = (spike / 100) * Math.exp(-0.5 * Math.pow(minDist / 1.2, 2));
+  return base + sea;
+}
+
+// alpha scaled by 1/sqrt(T) so smile compresses for longer tenors
+function alphaForTenor(alpha, tm) {
+  return alpha * Math.min(1 / Math.sqrt(Math.max(tm / 12, 1 / 12)), 3.0);
+}
+
+// Single vol point — returns % (e.g. 45.2)
+function volAt(F, K, tm, s0base, alpha, rho, beta, spike) {
+  const sigma0 = atmForTenor(tm, s0base, spike);
+  const alphaT = alphaForTenor(alpha, tm);
+  const T      = tm / 12;
+  const v      = sabrVol(F, K, T, sigma0, alphaT, rho, beta) * 100;
+  return Math.max(1, v);
+}
+
+
+// =========================================================
+// PARAMS
+// =========================================================
+const TENORS    = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24];
+const MONEYNESS = (() => {
+  const a = [];
+  for (let m = 0.60; m <= 1.50; m += 0.03) a.push(parseFloat(m.toFixed(2)));
+  return a;
+})();
+const F = 15;
+
+function getParams() {
+  return {
+    s0base:  parseFloat(document.getElementById('s0').value),
+    alpha:   parseFloat(document.getElementById('alpha').value),
+    rho:     parseFloat(document.getElementById('rho').value),
+    beta:    parseFloat(document.getElementById('beta').value),
+    spike:   parseFloat(document.getElementById('spike').value),
+    sliceTm: parseInt(document.getElementById('slice-tenor').value),
+  };
+}
+
+
+// =========================================================
+// SURFACE RENDER
+// =========================================================
+function buildZ(p) {
+  return TENORS.map(tm =>
+    MONEYNESS.map(m => parseFloat(volAt(F, F * m, tm, p.s0base, p.alpha, p.rho, p.beta, p.spike).toFixed(2)))
+  );
+}
+
+function renderSurface(p) {
+  const z = buildZ(p);
+
+  const trace = {
+    x: MONEYNESS,
+    y: TENORS,
+    z,
+    type: 'surface',
+    colorscale: [
+      [0,   '#042C53'],
+      [0.2, '#0C447C'],
+      [0.4, '#185FA5'],
+      [0.6, '#00d4ff'],
+      [0.8, '#00e5a0'],
+      [1,   '#f0c040'],
+    ],
+    colorbar: {
+      title: { text: 'Vol %', font: { size: 11, color: '#5a7a96' } },
+      tickfont: { size: 10, color: '#5a7a96' },
+      thickness: 12, len: 0.55,
+      bgcolor: 'rgba(0,0,0,0)',
+      bordercolor: '#1e2a38',
+    },
+    hovertemplate: 'K/F: %{x}<br>Tenor: %{y}m<br>Vol: %{z:.1f}%<extra></extra>',
+    contours: {
+      x: { show: true, usecolormap: false, color: 'rgba(0,212,255,0.08)', width: 1 },
+      y: { show: true, usecolormap: false, color: 'rgba(0,212,255,0.08)', width: 1 },
+    },
+    opacity: 0.93,
+  };
+
+  const layout = {
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor:  'rgba(0,0,0,0)',
+    margin: { l: 0, r: 0, t: 0, b: 0 },
+    scene: {
+      bgcolor: 'rgba(0,0,0,0)',
+      xaxis: {
+        title: { text: 'Moneyness (K/F)', font: { size: 11, color: '#5a7a96' } },
+        tickfont: { size: 10, color: '#5a7a96' },
+        gridcolor: '#1e2a38', showbackground: false, zeroline: false,
+        tickformat: '.2f', nticks: 8,
+      },
+      yaxis: {
+        title: { text: 'Delivery Month', font: { size: 11, color: '#5a7a96' } },
+        tickfont: { size: 10, color: '#5a7a96' },
+        gridcolor: '#1e2a38', showbackground: false, zeroline: false,
+        tickvals: TENORS,
+        ticktext: TENORS.map(tm => tenorLabel(tm)),
+      },
+      zaxis: {
+        title: { text: 'Implied Vol (%)', font: { size: 11, color: '#5a7a96' } },
+        tickfont: { size: 10, color: '#5a7a96' },
+        gridcolor: '#1e2a38', showbackground: false, zeroline: false,
+      },
+      camera: { eye: { x: 1.7, y: -1.5, z: 0.85 } },
+      aspectmode: 'manual',
+      aspectratio: { x: 1.2, y: 1.2, z: 0.8 },
+    },
+    font: { color: '#c8d8e8', family: "'Share Tech Mono', monospace" },
+  };
+
+  Plotly.react('surface-plot', [trace], layout, { responsive: true, displayModeBar: false });
+}
+
+
+// =========================================================
+// METRICS
+// =========================================================
+function updateMetrics(p) {
+  const atm  = tm => volAt(F, F,       tm, p.s0base, p.alpha, p.rho, p.beta, p.spike);
+  const wing = (tm, m) => volAt(F, F * m, tm, p.s0base, p.alpha, p.rho, p.beta, p.spike);
+
+  document.getElementById('m-atm1').textContent  = atm(1).toFixed(1)  + '%';
+  document.getElementById('m-atm3').textContent  = atm(3).toFixed(1)  + '%';
+  document.getElementById('m-atm12').textContent = atm(12).toFixed(1) + '%';
+
+  const skew   = wing(3, 1.15) - wing(3, 0.85);
+  const skewEl = document.getElementById('m-skew');
+  skewEl.textContent = (skew >= 0 ? '+' : '') + skew.toFixed(1) + ' vols';
+  skewEl.style.color = skew >= 0 ? 'var(--green)' : 'var(--red)';
+}
+
+
+// =========================================================
+// SMILE SLICE
+// =========================================================
+function updateSmileSlice(p) {
+  const tm = p.sliceTm;
+  document.getElementById('slice-label').textContent = tenorLabel(tm) + ' (' + tm + 'm)';
+
+  const strikes = [
+    { label: '90% OTM Put',     m: 0.90, cls: 'red' },
+    { label: '95% · 25\u0394 Put', m: 0.95, cls: 'red' },
+    { label: '100% ATM',        m: 1.00, cls: 'gold' },
+    { label: '105% · 25\u0394 Call', m: 1.05, cls: 'green' },
+    { label: '110% OTM Call',   m: 1.10, cls: 'green' },
+    { label: '115% Wing',       m: 1.15, cls: 'purple' },
+    { label: '120% Deep',       m: 1.20, cls: 'purple' },
+    { label: '80% Deep Put',    m: 0.80, cls: 'red' },
+  ];
+
+  document.getElementById('smile-grid').innerHTML = strikes.map(s => {
+    const v = volAt(F, F * s.m, tm, p.s0base, p.alpha, p.rho, p.beta, p.spike);
+    return `<div class="smile-cell">
+      <div class="smile-key">${s.label}</div>
+      <div class="smile-val ${s.cls}">${v.toFixed(2)}%</div>
+    </div>`;
+  }).join('');
+}
+
+
+// =========================================================
+// TERM STRUCTURE TABLE
+// =========================================================
+function updateTSTable(p) {
+  const rows = TENORS.map(tm => {
+    const atmV   = volAt(F, F,      tm, p.s0base, p.alpha, p.rho, p.beta, p.spike);
+    const call25 = volAt(F, F*1.15, tm, p.s0base, p.alpha, p.rho, p.beta, p.spike);
+    const put25  = volAt(F, F*0.85, tm, p.s0base, p.alpha, p.rho, p.beta, p.spike);
+    const rr     = call25 - put25;
+    const fly    = (call25 + put25) / 2 - atmV;
+    const winter = isWinterMonth(deliveryMonth(tm));
+    const cls    = winter ? 'td-hi' : '';
+    const lbl    = tenorLabel(tm);
+    return `<tr>
+      <td class="${cls}">${lbl}${winter ? ' \u2744' : ''}</td>
+      <td class="${cls}">${atmV.toFixed(1)}%</td>
+      <td style="color:${rr >= 0 ? 'var(--green)' : 'var(--red)'}">${(rr >= 0 ? '+' : '') + rr.toFixed(1)}</td>
+      <td style="color:var(--text-dim)">${fly.toFixed(2)}</td>
+      <td style="color:${rr >= 0 ? 'var(--green)' : 'var(--red)'}">${rr >= 0 ? 'CALL BID' : 'PUT BID'}</td>
+    </tr>`;
+  });
+  document.getElementById('ts-body').innerHTML = rows.join('');
+}
+
+
+// =========================================================
+// DRAW ALL
+// =========================================================
+function drawAll() {
+  const p = getParams();
+  renderSurface(p);
+  updateMetrics(p);
+  updateSmileSlice(p);
+  updateTSTable(p);
+}
+
+
+// =========================================================
+// WIRE CONTROLS
+// =========================================================
+const sliders = [
+  { id: 's0',    outId: 's0-out',    fmt: v => v + '%' },
+  { id: 'spike', outId: 'spike-out', fmt: v => v + '%' },
+  { id: 'alpha', outId: 'alpha-out', fmt: v => parseFloat(v).toFixed(2) },
+  { id: 'rho',   outId: 'rho-out',   fmt: v => (parseFloat(v) >= 0 ? '+' : '') + parseFloat(v).toFixed(2) },
+];
+
+sliders.forEach(({ id, outId, fmt }) => {
+  document.getElementById(id).addEventListener('input', e => {
+    document.getElementById(outId).textContent = fmt(e.target.value);
+    drawAll();
+  });
+});
+
+['beta', 'slice-tenor'].forEach(id =>
+  document.getElementById(id).addEventListener('change', drawAll)
+);
+
+
+// =========================================================
+// TIMESTAMP
+// =========================================================
+function updateTime() {
+  const ts = new Date().toUTCString().replace('GMT', 'UTC');
+  document.getElementById('timestamp').textContent = ts;
+  document.getElementById('footer-time').textContent = 'GENERATED ' + ts;
+}
+updateTime();
+setInterval(updateTime, 1000);
+
+
+// ── Populate slice-tenor dropdown with calendar months ──
+(function () {
+  const sel = document.getElementById('slice-tenor');
+  TENORS.forEach(tm => {
+    const opt = document.createElement('option');
+    opt.value = tm;
+    opt.textContent = tenorLabel(tm) + ' (' + tm + 'm)';
+    if (tm === 3) opt.selected = true;
+    sel.appendChild(opt);
+  });
+})();
+
+
+// ── Initial render ──
+drawAll();
+</script>
+</body>
+</html>

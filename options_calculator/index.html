@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LNG Options Premium Calculator</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <span class="brand-tag">LNG Derivatives Desk // Options Pricer v3.0</span>
+      <h1>JKM / TTF <span>OPTIONS</span> PREMIUM CALCULATOR</h1>
+    </div>
+    <div class="header-meta">
+      <div class="live-badge"><div class="live-dot"></div> MODEL LIVE</div>
+      <div class="timestamp" id="timestamp"></div>
+    </div>
+  </header>
+
+  <!-- Model selector -->
+  <div class="model-banner">
+    <button class="model-tab active-euro" id="tab-euro" onclick="setModel('european')">
+      <span class="model-badge badge-euro">BLACK-76</span>
+      <span class="model-tab-title">European Option</span>
+      <span class="model-tab-sub">Exchange-listed · CME JKM · ICE TTF futures options · Single expiry fix</span>
+    </button>
+    <button class="model-tab" id="tab-asian" onclick="setModel('asian')">
+      <span class="model-badge badge-asian">TURNBULL-WAKEMAN</span>
+      <span class="model-tab-title">Asian (Average Price) Option</span>
+      <span class="model-tab-sub">OTC · JKM monthly avg · TTF gas month · Cargo hedges · Physical settlement</span>
+    </button>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- LEFT: Inputs -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Option Parameters</span>
+          <span id="moneyness-badge" class="moneyness-badge badge-atm">ATM</span>
+        </div>
+        <div class="panel-body">
+
+          <div class="section-label">Contract Direction</div>
+          <div class="toggle-group" style="margin-bottom:14px;">
+            <button class="toggle-btn active-call" id="btn-call" onclick="setType('call')">&#9650; Call</button>
+            <button class="toggle-btn" id="btn-put" onclick="setType('put')">&#9660; Put</button>
+          </div>
+
+          <div class="input-row">
+            <div class="field">
+              <label>Spot Price <span class="unit">$/MMBtu</span></label>
+              <input type="number" id="spot" value="13.50" step="0.05" oninput="onInput()">
+            </div>
+            <div class="field">
+              <label>Strike Price <span class="unit">$/MMBtu</span></label>
+              <input type="number" id="strike" value="13.50" step="0.05" oninput="onInput()">
+            </div>
+          </div>
+
+          <div class="input-row">
+            <div class="field">
+              <label>Time to Expiry <span class="unit">years</span></label>
+              <input type="number" id="tte" value="0.25" step="0.01" min="0.01" max="5" oninput="onInput()">
+            </div>
+            <div class="field">
+              <label>Implied Volatility <span class="unit">%</span></label>
+              <input type="number" id="vol" value="45" step="0.5" min="1" max="200" oninput="onInput()">
+            </div>
+          </div>
+
+          <div class="input-row">
+            <div class="field">
+              <label>Risk-Free Rate <span class="unit">%</span></label>
+              <input type="number" id="rfr" value="5.25" step="0.25" oninput="onInput()">
+            </div>
+            <div class="field">
+              <label>Conv. Yield / Carry <span class="unit">%</span></label>
+              <input type="number" id="cy" value="2.50" step="0.25" oninput="onInput()">
+            </div>
+          </div>
+
+          <!-- Asian-only fields -->
+          <div class="asian-section" id="asian-fields">
+            <div class="asian-note">
+              Turnbull-Wakeman: arithmetic average-price option via moment-matching to lognormal. Standard for OTC LNG cargo hedges vs monthly JKM/TTF average.
+            </div>
+            <div class="input-row">
+              <div class="field">
+                <label>Avg Window <span class="unit">years</span></label>
+                <input type="number" id="avg-period" value="0.0833" step="0.005" min="0.001" oninput="onInput()">
+              </div>
+              <div class="field">
+                <label>Elapsed in Avg <span class="unit">years</span></label>
+                <input type="number" id="elapsed" value="0" step="0.005" min="0" oninput="onInput()">
+              </div>
+            </div>
+            <div class="field">
+              <label>Avg-to-Date (if elapsed &gt; 0) <span class="unit">$/MMBtu</span></label>
+              <input type="number" id="avg-so-far" value="0" step="0.05" oninput="onInput()">
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Vol Surface</div>
+
+          <div class="field">
+            <label>Smile / Skew Model</label>
+            <select id="skew-model" onchange="onInput()">
+              <option value="flat">Flat (ATMF)</option>
+              <option value="sticky-strike">Sticky Strike</option>
+              <option value="sabr" selected>SABR (Market Standard)</option>
+              <option value="rr-bf">Risk Reversal / Butterfly</option>
+            </select>
+          </div>
+
+          <div id="rr-bf-fields">
+            <div class="input-row">
+              <div class="field">
+                <label>25&#916; Risk Reversal <span class="unit">vol pts</span></label>
+                <input type="number" id="rr" value="-2.5" step="0.1" oninput="onInput()">
+              </div>
+              <div class="field">
+                <label>25&#916; Butterfly <span class="unit">vol pts</span></label>
+                <input type="number" id="bf" value="1.5" step="0.1" oninput="onInput()">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Notional <span class="unit">MMBtu</span></label>
+            <input type="number" id="notional" value="10000" step="1000" oninput="onInput()">
+          </div>
+
+          <button class="calc-btn" onclick="calculate()">&#11041; Price Option</button>
+        </div>
+      </div>
+
+      <!-- Model Assumptions -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Model Assumptions</span>
+          <span id="model-label" style="font-family:var(--mono);font-size:10px;color:var(--accent);">European / Black-76</span>
+        </div>
+        <div class="assumptions-grid" id="assumptions-grid"></div>
+      </div>
+
+    </div><!-- /left col -->
+
+    <!-- RIGHT: Outputs -->
+    <div class="right-col">
+
+      <!-- Option Premium -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Option Premium</span>
+          <span id="style-label" style="font-family:var(--mono);font-size:10px;color:var(--accent);">European &middot; Black-76</span>
+        </div>
+        <div class="premium-grid">
+          <div class="premium-card call">
+            <div class="pc-label">Call Premium</div>
+            <div class="pc-main call" id="call-prem">&mdash;</div>
+            <div class="pc-sub" id="call-total">&mdash; total</div>
+            <div class="pc-pct" id="call-iv-pct"></div>
+          </div>
+          <div class="premium-card put">
+            <div class="pc-label">Put Premium</div>
+            <div class="pc-main put" id="put-prem">&mdash;</div>
+            <div class="pc-sub" id="put-total">&mdash; total</div>
+            <div class="pc-pct" id="put-iv-pct"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Comparison -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Model Comparison &mdash; Active Leg</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">European vs Asian (T-W)</span>
+        </div>
+        <div style="padding:16px;">
+          <div class="compare-strip">
+            <div class="cmp-side">
+              <span class="cmp-model euro">European &middot; Black-76</span>
+              <span class="cmp-val" id="cmp-euro">&mdash;</span>
+              <span class="cmp-note">Single-fix settlement</span>
+            </div>
+            <div class="cmp-mid">
+              <div class="cmp-diff-label">Difference</div>
+              <div class="cmp-diff-val" id="cmp-diff">&mdash;</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px" id="cmp-diff-pct">&mdash;</div>
+            </div>
+            <div class="cmp-side right">
+              <span class="cmp-model asian">Asian &middot; T-W Approx</span>
+              <span class="cmp-val" id="cmp-asian">&mdash;</span>
+              <span class="cmp-note">Arithmetic avg settlement</span>
+            </div>
+          </div>
+          <div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.6">
+            Asian premium &lt; European by ~<span id="vega-ratio" style="color:var(--purple)">&mdash;</span> (effective vol ratio). The longer elapsed averaging, the more Asian price tracks intrinsic value.
+          </div>
+        </div>
+      </div>
+
+      <!-- Greeks -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Option Greeks</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+            Active: <span id="active-leg" style="color:var(--gold)">CALL</span>
+            &nbsp;&middot;&nbsp;<span id="active-model-greek" style="color:var(--accent)">European</span>
+          </span>
+        </div>
+        <div class="greeks-grid">
+          <div class="greek-cell"><span class="greek-sym">&#916;</span><span class="greek-name">Delta</span><span class="greek-val" id="g-delta">&mdash;</span></div>
+          <div class="greek-cell"><span class="greek-sym">&#915;</span><span class="greek-name">Gamma</span><span class="greek-val" id="g-gamma">&mdash;</span></div>
+          <div class="greek-cell"><span class="greek-sym">&#920;</span><span class="greek-name">Theta/day</span><span class="greek-val" id="g-theta">&mdash;</span></div>
+          <div class="greek-cell"><span class="greek-sym">&#957;</span><span class="greek-name">Vega/1%</span><span class="greek-val" id="g-vega">&mdash;</span></div>
+          <div class="greek-cell"><span class="greek-sym">&#961;</span><span class="greek-name">Rho/1%</span><span class="greek-val" id="g-rho">&mdash;</span></div>
+        </div>
+      </div>
+
+      <!-- Put-Call Parity -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Put-Call Parity &amp; Carry</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">European Black-76 basis</span>
+        </div>
+        <div class="parity-grid" id="parity-grid"></div>
+      </div>
+
+      <!-- Scenario Matrix -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Premium Scenario Matrix</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">Spot &times; Vol &middot; Active model &amp; leg</span>
+        </div>
+        <div class="panel-body matrix-wrap">
+          <table id="scenario-table"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+      <!-- Methodology -->
+      <div class="methodology">
+        <p>
+          <strong>European / Black-76:</strong> Standard for CME JKM &amp; ICE TTF exchange-listed futures options. F = S&middot;e^((r&minus;cy)&middot;T). Single-fix European exercise. Analytical Greeks.<br>
+          <strong>Asian / Turnbull-Wakeman:</strong> Moment-matching approximation &mdash; matches first two moments of arithmetic average distribution to a lognormal. Industry standard for OTC LNG cargo hedges settling vs monthly JKM/TTF average. Supports in-progress averaging via adjusted strike. Greeks computed numerically.<br>
+          <strong>Vol surface:</strong> SABR smile adjustment via 25&#916; RR/BF. LNG markets typically show negative skew (puts bid). Rates: USD OIS. Indicative mid-market &mdash; not for execution.
+        </p>
+      </div>
+
+    </div><!-- /right col -->
+  </div><!-- /main-grid -->
+
+  <footer>
+    <p>BLACK-76 / TURNBULL-WAKEMAN // LNG DERIVATIVES DESK // INDICATIVE MID &mdash; NOT FOR EXECUTION</p>
+    <p id="footer-time"></p>
+  </footer>
+</div><!-- /container -->
+
+<script>
+// =========================================================
+// MATH
+// =========================================================
+const norm = (() => {
+  function pdf(x) { return Math.exp(-.5*x*x)/Math.sqrt(2*Math.PI); }
+  function cdf(x) {
+    const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+    const sg=x<0?-1:1, t=1/(1+p*Math.abs(x));
+    const y=1-((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+    return .5*(1+sg*y);
+  }
+  return{pdf,cdf};
+})();
+
+function black76(F,K,T,r,sigma,type){
+  if(T<=0){return{price:type==='call'?Math.max(F-K,0):Math.max(K-F,0),d1:0,d2:0};}
+  const d1=(Math.log(F/K)+(r+.5*sigma*sigma)*T)/(sigma*Math.sqrt(T));
+  const d2=d1-sigma*Math.sqrt(T);
+  const df=Math.exp(-r*T);
+  const price=type==='call'?df*(F*norm.cdf(d1)-K*norm.cdf(d2)):df*(K*norm.cdf(-d2)-F*norm.cdf(-d1));
+  return{price,d1,d2};
+}
+
+function euroGreeks(F,K,T,r,sigma,type){
+  if(T<=.001)return{delta:0,gamma:0,theta:0,vega:0,rho:0};
+  const{d1,d2}=black76(F,K,T,r,sigma,type);
+  const df=Math.exp(-r*T),sqT=Math.sqrt(T),nd1=norm.pdf(d1),s=type==='call'?1:-1;
+  return{
+    delta: s*df*norm.cdf(s*d1),
+    gamma: df*nd1/(F*sigma*sqT),
+    theta: (-(F*df*nd1*sigma)/(2*sqT)-s*r*K*df*norm.cdf(s*d2)+s*r*F*df*norm.cdf(s*d1))/365,
+    vega:  F*df*nd1*sqT*.01,
+    rho:   s*K*T*df*norm.cdf(s*d2)*.01
+  };
+}
+
+// Turnbull-Wakeman Asian Option Pricer
+function turnbullWakeman(S, K, T, T1, r, b, sigma, A_acc, t_el, type) {
+  const tau = T - T1;
+  if (tau < 1e-4) {
+    const F = S * Math.exp(b * T);
+    return { ...black76(F, K, T, r, sigma, type), sigmaA: sigma, FA: F, Kstar: K };
+  }
+  const sig2 = sigma * sigma;
+  const totalWindow = tau + (t_el || 0);
+  let Kstar = K;
+  if (t_el > 0 && A_acc > 0) {
+    Kstar = (totalWindow / tau) * K - (t_el / tau) * A_acc;
+    if (Kstar <= 0) {
+      const intr = type === 'call' ? Math.max(S - K, 0) : Math.max(K - S, 0);
+      return { price: Math.exp(-r * T) * intr, sigmaA: 0, FA: S, Kstar: 0 };
+    }
+  }
+  const F0 = S * Math.exp(b * T1);
+  let M1;
+  if (Math.abs(b) < 1e-6) {
+    M1 = F0;
+  } else {
+    M1 = F0 * (Math.exp(b * tau) - 1) / (b * tau);
+  }
+  let M2;
+  const b2 = 2 * b + sig2;
+  if (Math.abs(b) < 1e-6) {
+    const s2t = sig2 * tau;
+    M2 = F0 * F0 * 2 * (Math.exp(s2t) - 1 - s2t) / (sig2 * sig2 * tau * tau);
+  } else {
+    const eb  = Math.exp(b * tau);
+    const eb2 = Math.exp(b2 * tau);
+    M2 = 2 * F0 * F0 * (eb2 / b2 - eb / b) / ((b2 - b) * tau * tau);
+  }
+  const ratio = M2 / (M1 * M1);
+  if (ratio <= 1 || !isFinite(ratio)) {
+    const intr = type === 'call' ? Math.max(M1 - Kstar, 0) : Math.max(Kstar - M1, 0);
+    return { price: Math.exp(-r * T) * intr, sigmaA: 0, FA: M1, Kstar };
+  }
+  const sigmaA_sq = Math.log(ratio) / tau;
+  const sigmaA    = Math.sqrt(sigmaA_sq);
+  const FA = M1;
+  const sqTau = Math.sqrt(tau);
+  const d1 = (Math.log(FA / Kstar) + 0.5 * sigmaA_sq * tau) / (sigmaA * sqTau);
+  const d2 = d1 - sigmaA * sqTau;
+  const df = Math.exp(-r * T);
+  let price;
+  if (type === 'call') price = df * (FA * norm.cdf(d1) - Kstar * norm.cdf(d2));
+  else                 price = df * (Kstar * norm.cdf(-d2) - FA * norm.cdf(-d1));
+  return { price: Math.max(price || 0, 0), sigmaA, FA, Kstar, d1, d2 };
+}
+
+function asianGreeks(S,K,T,T1,r,b,sigma,A_acc,t_el,type){
+  if(T<.001)return{delta:0,gamma:0,theta:0,vega:0,rho:0};
+  const h=.01,dv=.001,dt=1/365,dr=.001;
+  const f=(_S,_T,_s,_r)=>turnbullWakeman(_S,K,_T,T1,_r,_r-r+b,_s,A_acc,t_el,type).price;
+  const base=f(S,T,sigma,r);
+  const delta=(f(S+h,T,sigma,r)-f(S-h,T,sigma,r))/(2*h);
+  const gamma=(f(S+h,T,sigma,r)-2*base+f(S-h,T,sigma,r))/(h*h);
+  const theta=T>dt+.001?f(S,T-dt,sigma,r)-base:0;
+  const vega=(f(S,T,sigma+dv,r)-base)/dv*.01;
+  const rho=(f(S,T,sigma,r+dr)-base)/dr*.01;
+  return{delta,gamma,theta,vega,rho};
+}
+
+function smileVol(F,K,T,vol,model,rr,bf,side){
+  if(model==='sabr'||model==='rr-bf'){
+    if(T<=0||F<=0||K<=0)return vol;
+    const x=Math.log(K/F), z=x/(vol*Math.sqrt(T));
+    const rrS=side==='call'?rr:-rr;
+    return Math.max(vol+(bf*z*z+.5*rrS*z)/100,.01);
+  }
+  if(model==='sticky-strike'&&T>0&&vol>0){
+    const F2=F||K; const z=Math.log(K/F2)/(vol*Math.sqrt(T));
+    return Math.max(vol+(side==='call'?-.01:.01)*z,.01);
+  }
+  return vol;
+}
+
+// =========================================================
+// STATE
+// =========================================================
+let currentType='call', currentModel='european';
+
+function setType(t){
+  currentType=t;
+  document.getElementById('btn-call').className='toggle-btn'+(t==='call'?' active-call':'');
+  document.getElementById('btn-put').className ='toggle-btn'+(t==='put' ?' active-put' :'');
+  document.getElementById('active-leg').textContent=t.toUpperCase();
+  document.getElementById('active-leg').style.color=t==='call'?'var(--green)':'var(--red)';
+  calculate();
+}
+
+function setModel(m){
+  currentModel=m;
+  document.getElementById('tab-euro').className ='model-tab'+(m==='european'?' active-euro' :'');
+  document.getElementById('tab-asian').className='model-tab'+(m==='asian'   ?' active-asian':'');
+  document.getElementById('asian-fields').className='asian-section'+(m==='asian'?' visible':'');
+  const isAsian=m==='asian';
+  const col=isAsian?'var(--purple)':'var(--accent)';
+  const lbl=isAsian?'Asian / Turnbull-Wakeman':'European / Black-76';
+  const slbl=isAsian?'Asian \u00b7 Turnbull-Wakeman':'European \u00b7 Black-76';
+  document.getElementById('model-label').textContent=lbl;
+  document.getElementById('model-label').style.color=col;
+  document.getElementById('style-label').textContent=slbl;
+  document.getElementById('style-label').style.color=col;
+  document.getElementById('active-model-greek').textContent=isAsian?'Asian':'European';
+  document.getElementById('active-model-greek').style.color=col;
+  calculate();
+}
+
+function onInput(){
+  const model=document.getElementById('skew-model').value;
+  document.getElementById('rr-bf-fields').style.display=(model==='sabr'||model==='rr-bf')?'':'none';
+  const S=parseFloat(document.getElementById('spot').value)||0;
+  const K=parseFloat(document.getElementById('strike').value)||0;
+  if(S>0&&K>0){
+    const m=S/K;
+    let badge,cls;
+    if(m>1.005){badge='ITM';cls='badge-itm';}
+    else if(m<.995){badge='OTM';cls='badge-otm';}
+    else{badge='ATM';cls='badge-atm';}
+    const el=document.getElementById('moneyness-badge');
+    el.textContent=badge; el.className='moneyness-badge '+cls;
+  }
+  calculate();
+}
+
+function fmt(n,dp=4){return isNaN(n)||!isFinite(n)?'\u2014':n.toFixed(dp);}
+function fmtD(n){return isNaN(n)||!isFinite(n)?'\u2014':'$'+n.toFixed(4);}
+
+function setGreek(id,val,dp,cls){
+  const el=document.getElementById(id);
+  el.textContent=fmt(val,dp); el.className='greek-val '+cls;
+}
+
+// =========================================================
+// CALCULATE
+// =========================================================
+function calculate(){
+  const S   =parseFloat(document.getElementById('spot').value)||0;
+  const K   =parseFloat(document.getElementById('strike').value)||0;
+  const T   =parseFloat(document.getElementById('tte').value)||0;
+  const vol =(parseFloat(document.getElementById('vol').value)||0)/100;
+  const r   =(parseFloat(document.getElementById('rfr').value)||0)/100;
+  const cy  =(parseFloat(document.getElementById('cy').value)||0)/100;
+  const N   =parseFloat(document.getElementById('notional').value)||0;
+  const rr  =parseFloat(document.getElementById('rr').value)||0;
+  const bf  =parseFloat(document.getElementById('bf').value)||0;
+  const model=document.getElementById('skew-model').value;
+  const avgP =parseFloat(document.getElementById('avg-period').value)||0.0833;
+  const tEl  =parseFloat(document.getElementById('elapsed').value)||0;
+  const aAcc =parseFloat(document.getElementById('avg-so-far').value)||0;
+
+  if(S<=0||K<=0||T<=0||vol<=0)return;
+
+  const b=r-cy;
+  const F=S*Math.exp(b*T);
+  const T1=Math.max(T-avgP,0);
+
+  const callVol=smileVol(F,K,T,vol,model,rr,bf,'call');
+  const putVol =smileVol(F,K,T,vol,model,rr,bf,'put');
+
+  const euroCallP=black76(F,K,T,r,callVol,'call').price;
+  const euroPutP =black76(F,K,T,r,putVol, 'put').price;
+
+  const asianCallRes=turnbullWakeman(S,K,T,T1,r,b,callVol,aAcc,tEl,'call');
+  const asianPutRes =turnbullWakeman(S,K,T,T1,r,b,putVol, aAcc,tEl,'put');
+  const asianCallP=asianCallRes.price;
+  const asianPutP =asianPutRes.price;
+
+  const callP=currentModel==='asian'?asianCallP:euroCallP;
+  const putP =currentModel==='asian'?asianPutP :euroPutP;
+
+  document.getElementById('call-prem').textContent=fmtD(callP);
+  document.getElementById('put-prem').textContent =fmtD(putP);
+  document.getElementById('call-total').textContent='$'+(callP*N).toLocaleString(undefined,{maximumFractionDigits:0})+' total';
+  document.getElementById('put-total').textContent ='$'+(putP *N).toLocaleString(undefined,{maximumFractionDigits:0})+' total';
+  document.getElementById('call-iv-pct').textContent=(callP/S*100).toFixed(2)+'% of spot  |  call \u03c3 '+(callVol*100).toFixed(1)+'%';
+  document.getElementById('put-iv-pct').textContent =(putP /S*100).toFixed(2)+'% of spot  |  put \u03c3  '+(putVol *100).toFixed(1)+'%';
+
+  const aVol=currentType==='call'?callVol:putVol;
+  let g;
+  if(currentModel==='asian'){
+    g=asianGreeks(S,K,T,T1,r,b,aVol,aAcc,tEl,currentType);
+  } else {
+    g=euroGreeks(F,K,T,r,aVol,currentType);
+  }
+  setGreek('g-delta',g.delta,4,g.delta>=0?'pos':'neg');
+  setGreek('g-gamma',g.gamma,5,'pos');
+  setGreek('g-theta',g.theta,4,'neg');
+  setGreek('g-vega', g.vega, 4,'pos');
+  setGreek('g-rho',  g.rho,  4,g.rho>=0?'pos':'neg');
+
+  const aEuro =currentType==='call'?euroCallP:euroPutP;
+  const aAsian=currentType==='call'?asianCallP:asianPutP;
+  const diff=aAsian-aEuro;
+  const diffPct=aEuro>0?diff/aEuro*100:0;
+  document.getElementById('cmp-euro').textContent =fmtD(aEuro);
+  document.getElementById('cmp-asian').textContent=fmtD(aAsian);
+  document.getElementById('cmp-diff').textContent =(diff>=0?'+':'')+diff.toFixed(4);
+  document.getElementById('cmp-diff').style.color=diff<0?'var(--red)':'var(--green)';
+  document.getElementById('cmp-diff-pct').textContent=(diffPct>=0?'+':'')+diffPct.toFixed(1)+'%';
+  const sigmaA=asianCallRes.sigmaA||0;
+  const vegaratio=vol>0?(sigmaA/vol*100).toFixed(1)+'%':'\u2014';
+  document.getElementById('vega-ratio').textContent=vegaratio+' of European \u03c3';
+
+  document.getElementById('assumptions-grid').innerHTML=[
+    ['Forward (F)',   '$'+F.toFixed(4)],
+    ['ATM IV Input', (vol*100).toFixed(1)+'%'],
+    ['Call Smile \u03c3', (callVol*100).toFixed(1)+'%'],
+    ['Put Smile \u03c3',  (putVol*100).toFixed(1)+'%'],
+    currentModel==='asian'
+      ?['Asian Eff. \u03c3',(sigmaA*100).toFixed(2)+'%']
+      :['Cost of Carry',(b*100).toFixed(2)+'%'],
+    ['Discount Rate',(r*100).toFixed(2)+'%'],
+  ].map(([k,v])=>`<div class="assump-cell"><div class="assump-key">${k}</div><div class="assump-val">${v}</div></div>`).join('');
+
+  const pvFK=Math.exp(-r*T)*(F-K);
+  const parity=euroCallP-euroPutP;
+  document.getElementById('parity-grid').innerHTML=[
+    ['C \u2212 P (Euro)',  '$'+parity.toFixed(4)],
+    ['PV(F\u2212K)',       '$'+pvFK.toFixed(4)],
+    ['Parity Error',  '$'+Math.abs(parity-pvFK).toFixed(5)],
+    ['Intrinsic Call','$'+Math.max(F-K,0).toFixed(4)],
+    ['Intrinsic Put', '$'+Math.max(K-F,0).toFixed(4)],
+    ['Time Value',    '$'+Math.max(euroCallP-Math.max(F-K,0),0).toFixed(4)],
+  ].map(([k,v])=>`<div class="assump-cell"><div class="assump-key">${k}</div><div class="assump-val">${v}</div></div>`).join('');
+
+  buildMatrix(S,K,T,T1,r,b,vol,model,rr,bf,tEl,aAcc);
+}
+
+function buildMatrix(S,K,T,T1,r,b,vol,model,rr,bf,tEl,aAcc){
+  const spotMults=[.70,.80,.90,1.00,1.10,1.20,1.30];
+  const volShifts=[-.20,-.10,0,.10,.20];
+  const colLabels=volShifts.map(v=>(v>=0?'+':'')+(v*100).toFixed(0)+'% \u03c3');
+
+  const thead=document.querySelector('#scenario-table thead');
+  const tbody=document.querySelector('#scenario-table tbody');
+  thead.innerHTML='<tr><th>Spot</th>'+colLabels.map(l=>`<th>${l}</th>`).join('')+'</tr>';
+  tbody.innerHTML='';
+
+  spotMults.forEach(sm=>{
+    const Ss=S*sm, Fs=Ss*Math.exp(b*T);
+    const mono=Fs/K;
+    const rc=mono>1.005?'cell-itm':mono>=.995?'cell-atm':'cell-otm';
+    let cells=`<td class="${rc}">$${Ss.toFixed(2)}</td>`;
+    volShifts.forEach(vs=>{
+      const av=Math.max(vol+vs,.01);
+      const sv=smileVol(Fs,K,T,av,model,rr,bf,currentType);
+      let price;
+      if(currentModel==='asian'){
+        price=turnbullWakeman(Ss,K,T,T1,r,b,sv,aAcc,tEl,currentType).price;
+      } else {
+        price=black76(Fs,K,T,r,sv,currentType).price;
+      }
+      cells+=`<td class="${rc}">$${(price||0).toFixed(3)}</td>`;
+    });
+    const tr=document.createElement('tr');
+    tr.innerHTML=cells;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateTime(){
+  const ts=new Date().toUTCString().replace('GMT','UTC');
+  document.getElementById('timestamp').textContent=ts;
+  document.getElementById('footer-time').textContent='GENERATED '+ts;
+}
+updateTime(); setInterval(updateTime,1000);
+
+onInput();
+</script>
+</body>
+</html>

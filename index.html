@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LNG Analytics Suite</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ════════════════════ SIDEBAR ════════════════════ -->
+  <aside class="sidebar">
+
+    <div>
+      <span class="wordmark-label">Analytics Suite</span>
+      <h1 class="wordmark-title">LNG Tools</h1>
+    </div>
+
+    <div class="s-rule"></div>
+
+    <div class="avatar-block">
+      <div class="avatar-ring">
+        <div class="avatar-inner">
+          <!--
+            TO USE YOUR OWN PHOTO
+            ─────────────────────
+            1. Place photo.jpg in the same folder as front_page.html
+            2. Delete the <svg> below
+            3. Uncomment the <img> line
+          -->
+          <svg class="placeholder-svg" viewBox="0 0 56 56" fill="none">
+            <circle cx="28" cy="21" r="11" fill="#eef0f3"/>
+            <path d="M5 52c0-12.7 10.3-20 23-20s23 7.3 23 20" fill="#eef0f3"/>
+          </svg>
+          <!-- <img src="photo.jpg" alt="Profile photo" /> -->
+        </div>
+      </div>
+      <div class="profile-name">LNG Trader</div>
+      <div class="profile-role">// Derivatives &amp; Fundamentals</div>
+    </div>
+
+    <p class="bio">
+      Commercially driven and highly analytical LNG trader with extensive experience generating
+      risk-adjusted P&amp;L across commodities markets. Proven track record monetizing flat price,
+      basis, and calendar dislocations using futures and options &mdash; with deep expertise in
+      building fundamental supply/demand models.
+    </p>
+
+    <div class="s-rule"></div>
+
+    <div class="market-strip">
+      <span class="m-tag">TTF</span>
+      <span class="m-tag">JKM</span>
+      <span class="m-tag">Brent</span>
+      <span class="m-tag">Henry Hub</span>
+    </div>
+
+  </aside><!-- /sidebar -->
+
+  <!-- ════════════════════ MAIN CONTENT ════════════════════ -->
+  <main class="content">
+
+    <div class="content-header">
+      <p class="section-label">&gt;&gt; Analytic tools &mdash; click to open</p>
+      <div class="header-meta">JKM &middot; TTF &middot; Brent &middot; Henry Hub<br/>Derivatives &amp; Fundamentals</div>
+    </div>
+
+    <div class="tool-grid" id="toolGrid">
+
+      <!-- ── 1 · Options Premium Calculator ── -->
+      <a class="tool-card" href="options_calculator/index.html">
+
+        <!-- Preview tooltip -->
+        <div class="preview-tip" aria-hidden="true">
+          <img src="previews/options_calculator.png" alt="" />
+        </div>
+
+        <div class="card-top">
+          <div class="tool-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div class="card-arrow">
+            <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="card-name">Options Premium Calculator</div>
+          <div class="card-desc">Price JKM &amp; TTF options with Black-76. Risk-free rate input, full Greeks, and P&amp;L surface visualisation.</div>
+          <div class="card-tags">
+            <span class="tag">Black-76</span>
+            <span class="tag">JKM</span>
+            <span class="tag">TTF</span>
+            <span class="tag">Greeks</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- ── 2 · SABR Volatility Surface ── -->
+      <a class="tool-card" href="vol_surface/index.html">
+
+        <div class="preview-tip" aria-hidden="true">
+          <img src="previews/sabr_vol_surface.png" alt="" />
+        </div>
+
+        <div class="card-top">
+          <div class="tool-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 3v18h18"/>
+              <path d="M7 16c1-3 3-5 5-4s3 3 5 1"/>
+            </svg>
+          </div>
+          <div class="card-arrow">
+            <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="card-name">SABR Volatility Surface</div>
+          <div class="card-desc">Interactive 3-D implied vol surface for JKM &amp; TTF. Calibrate SABR params and inspect smile dynamics across tenors.</div>
+          <div class="card-tags">
+            <span class="tag">SABR</span>
+            <span class="tag">Vol Surface</span>
+            <span class="tag">Implied Vol</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- ── 3 · LNG Basis Tracker ── -->
+      <a class="tool-card" href="basis_tracker/index.html">
+
+        <div class="preview-tip" aria-hidden="true">
+          <img src="previews/basis_tracker.png" alt="" />
+        </div>
+
+        <div class="card-top">
+          <div class="tool-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="3"  y="3"  width="7" height="7" rx="1"/>
+              <rect x="14" y="3"  width="7" height="7" rx="1"/>
+              <rect x="3"  y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+          </div>
+          <div class="card-arrow">
+            <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="card-name">LNG Basis Tracker</div>
+          <div class="card-desc">Track inter-basin basis differentials and monitor arb windows between Atlantic and Pacific hubs.</div>
+          <div class="card-tags">
+            <span class="tag">Basis</span>
+            <span class="tag">Arb</span>
+            <span class="tag">Flow</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- ── 4 · ICE Futures Curve Tracker ── -->
+      <a class="tool-card" href="ice_futures_tracker/index.html">
+
+        <div class="preview-tip" aria-hidden="true">
+          <img src="previews/ice_futures_tracker.png" alt="" />
+        </div>
+
+        <div class="card-top">
+          <div class="tool-icon">
+            <svg viewBox="0 0 24 24">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div class="card-arrow">
+            <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="card-name">Futures Curve Tracker</div>
+          <div class="card-desc">Forward curve visualiser. Compare term structure across roll dates and benchmark against spot.</div>
+          <div class="card-tags">
+            <span class="tag">ICE</span>
+            <span class="tag">Futures</span>
+            <span class="tag">Forward Curve</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- ── Placeholder for future modules ── -->
+      <div class="tool-card add-card" aria-hidden="true">
+        <div class="add-inner">
+          <div class="add-plus">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <span class="add-label">Add module</span>
+        </div>
+      </div>
+
+    </div><!-- /tool-grid -->
+
+    <div class="c-foot">
+      <span class="foot-txt">LNG Analytics Suite</span>
+      <div class="foot-dot"></div>
+      <span class="foot-txt">All tools run client-side</span>
+    </div>
+
+  </main><!-- /content -->
+</div><!-- /page -->
+
+</body>
+</html>

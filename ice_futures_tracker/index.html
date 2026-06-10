@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ICE Futures &mdash; Curve Tracker</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Vendor -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ HEADER ═══ -->
+<header>
+  <div class="logo">ICE Futures <span class="logo-pill">Tracker</span></div>
+  <div class="hdr-r">
+    <span id="dst">No data loaded</span>
+    <button class="btn-g" onclick="document.getElementById('fi').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+      </svg>
+      Import .xlsx
+    </button>
+    <button class="btn-s" onclick="loadSample()">Load sample</button>
+    <input type="file" id="fi" accept=".xlsx" onchange="handleFile(event)">
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════ APP SHELL ═══ -->
+<div class="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside>
+    <div class="snav">
+      <div style="margin-bottom:10px">
+        <div class="slbl" style="margin-bottom:5px">Views</div>
+
+        <button class="nb active" id="navCurve" onclick="switchTab('curve')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          Tenor Viewer
+        </button>
+
+        <button class="nb" id="navSpread" onclick="switchTab('spread')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <path d="M6 10l6-6 6 6"/>
+            <path d="M6 14l6 6 6-6" opacity=".4"/>
+          </svg>
+          Spread Analysis
+        </button>
+
+        <button class="nb" id="navHistory" onclick="switchTab('history')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Contract History
+        </button>
+      </div>
+    </div>
+
+    <div class="sdiv"></div>
+    <div id="sc" class="sctrl"></div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main>
+
+    <!-- WELCOME -->
+    <div id="panel-welcome" class="panel active">
+      <div class="dz" id="dz"
+        onclick="document.getElementById('fi').click()"
+        ondragover="event.preventDefault();this.classList.add('dg')"
+        ondragleave="this.classList.remove('dg')"
+        ondrop="handleDrop(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        <h3>Drop your ICE Futures Excel file here</h3>
+        <p>
+          Reads HH, TTF, TFU, JKM and Brent tabs.<br>
+          Rows = observation dates &nbsp;&middot;&nbsp; Columns = contract tenors.<br>
+          Or click <strong style="color:var(--text)">Load sample</strong> to explore with generated data.
+        </p>
+      </div>
+    </div>
+
+    <!-- TENOR VIEWER -->
+    <div id="panel-curve" class="panel">
+      <div id="cStats" class="srow"></div>
+      <div class="card">
+        <div class="chdr">
+          <span class="ctitle">Price over time &mdash; selected tenors</span>
+          <span class="cmeta" id="cMeta"></span>
+        </div>
+        <div id="cLeg" class="leg"></div>
+        <div class="cw">
+          <canvas id="cChart" role="img" aria-label="Price of selected contract tenors plotted over observation dates"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPREAD ANALYSIS -->
+    <div id="panel-spread" class="panel">
+      <div class="card">
+        <div class="chdr">
+          <span class="ctitle">Spread &mdash; time series</span>
+          <span class="cmeta" id="sMeta"></span>
+        </div>
+        <div class="sgrid">
+          <div class="spair">
+            <div>
+              <div class="clbl" style="margin-bottom:4px">Product A</div>
+              <select id="s1P" onchange="onSPC(1)"></select>
+            </div>
+            <div>
+              <div class="clbl" style="margin-bottom:4px">Tenor A</div>
+              <select id="s1T" onchange="renderSpread()"></select>
+            </div>
+          </div>
+          <div class="smid">&minus;</div>
+          <div class="spair">
+            <div>
+              <div class="clbl" style="margin-bottom:4px">Product B</div>
+              <select id="s2P" onchange="onSPC(2)"></select>
+            </div>
+            <div>
+              <div class="clbl" style="margin-bottom:4px">Tenor B</div>
+              <select id="s2T" onchange="renderSpread()"></select>
+            </div>
+          </div>
+        </div>
+        <div id="sStats" class="srow" style="margin-bottom:14px"></div>
+        <div class="cw">
+          <canvas id="stsChart" role="img" aria-label="Spread between two tenors over observation dates"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chdr">
+          <span class="ctitle">Spread across the forward curve</span>
+          <span class="cmeta" id="scMeta"></span>
+        </div>
+        <div class="cws">
+          <canvas id="scChart" role="img" aria-label="Spread across forward curve at latest date"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTRACT HISTORY -->
+    <div id="panel-history" class="panel">
+      <div class="twocol">
+        <div class="card">
+          <div class="chdr">
+            <span class="ctitle">Forward curve snapshots</span>
+            <span class="cmeta" id="hMeta"></span>
+          </div>
+          <div id="hLeg" class="leg"></div>
+          <div class="cw">
+            <canvas id="hChart" role="img" aria-label="Forward curve at different historical snapshot dates"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="chdr"><span class="ctitle">Price snapshots &mdash; selected tenor</span></div>
+          <div id="hTable"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /.app -->
+
+
+<script>
+// =========================================================
+// CONSTANTS
+// =========================================================
+const PRODS = ['HH', 'TTF', 'TFU', 'JKM', 'Brent'];
+
+const TCOLS = [
+  '#3a9dff', '#00d48a', '#ff6f3c', '#b47efa', '#f4c63e',
+  '#f472b6', '#34d399', '#94a3b8',
+];
+
+const HCOLS = [
+  '#dce0ed', '#00d48a', '#3a9dff', '#ff6f3c', '#b47efa',
+  '#f4c63e', '#f472b6', '#94a3b8', '#fb923c', '#a78bfa',
+  '#38bdf8', '#4ade80', '#e879f9', '#fde047', '#f87171', '#67e8f9',
+];
+
+const MON_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// XLSX.js cellDates:true creates Date objects at LOCAL midnight.
+// Use LOCAL getters throughout — toISOString()/getUTC*() would shift dates
+// in UTC+ timezones (e.g. local midnight UTC+8 = previous day in UTC).
+const pad2 = n => String(n).padStart(2, '0');
+const iso  = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+function fmtCal(d) { return d ? MON_SHORT[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) : ''; }
+
+
+// =========================================================
+// STATE
+// =========================================================
+let DATA = {}, charts = {};
+let cProd = '', cTenors = [], cStart = '', cEnd = '';
+let sStart = '', sEnd = '';
+let hRefLines = [];
+
+
+// =========================================================
+// UTILS
+// =========================================================
+/**
+ * Convert any date input to a LOCAL-midnight Date so local getters are always correct.
+ * XLSX.js cellDates:true already gives local-midnight Dates for date-typed cells.
+ * For numeric Excel serials or ISO strings we reconstruct explicitly as local midnight.
+ */
+const toD = v => {
+  if (!v) return null;
+  if (v instanceof Date) { if (isNaN(v)) return null; return v; }
+  if (typeof v === 'number') {
+    // Excel serial -> UTC epoch -> extract UTC parts -> local midnight
+    const t = new Date(Math.round((v - 25569) * 86400000));
+    return new Date(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate());
+  }
+  // "YYYY-MM-DD" string -> local midnight
+  const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  return null;
+};
+
+const tenors   = p => DATA[p]?.labels || [];
+const obsDates = () => {
+  const s = new Set();
+  Object.keys(DATA).forEach(p => Object.keys(DATA[p].series).forEach(d => s.add(d)));
+  return [...s].sort((a, b) => b.localeCompare(a)); // newest first
+};
+const closest = (target, dates) => {
+  let best = null, bd = Infinity;
+  for (const d of dates) {
+    const diff = Math.abs(new Date(d) - new Date(target));
+    if (diff < bd) { bd = diff; best = d; }
+  }
+  return best;
+};
+const killChart = id => { if (charts[id]) { charts[id].destroy(); delete charts[id]; } };
+const setStatus = (h, ok = false) => {
+  const e = document.getElementById('dst');
+  e.innerHTML = h;
+  e.className = ok ? 'ok' : '';
+};
+
+
+// =========================================================
+// PARSE
+// =========================================================
+function parseSheet(wb, name) {
+  const ws = wb.Sheets[name];
+  if (!ws) return null;
+  const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+  if (raw.length < 3) return null;
+
+  // row 0: contract calendar dates (col 0 = empty, cols 1+ = dates starting Jan 2024)
+  // row 1: tenor codes            (col 0 = "Time Series", cols 1+ = codes starting Feb 2024)
+  // The label row is offset +1 column ahead of the date row in the source Excel:
+  //   B1=Jan2024, B2=G24(Feb) — so label[i] correctly pairs with rawDates[i+1].
+  const rawDates  = raw[0].slice(1);
+  const rawLabels = raw[1].slice(1);
+  const labels = [], contractDates = [], calLabel = {};
+
+  for (let i = 0; i < rawLabels.length; i++) {
+    const lbl = rawLabels[i];
+    if (!lbl) continue;
+    const d = toD(rawDates[i + 1]); // +1: label at col B maps to date at col C
+    labels.push(lbl);
+    contractDates.push(d);
+    const prefix = lbl.split(/[\s\d]/)[0];
+    calLabel[lbl] = d ? prefix + ' ' + fmtCal(d) : lbl;
+  }
+
+  const series = {};
+  for (const row of raw.slice(2)) {
+    const d = toD(row[0]);
+    if (!d) continue;
+    // shift observation date +1 day
+    d.setDate(d.getDate() + 1);
+    const key = iso(d);
+    series[key] = {};
+    for (let c = 1; c < row.length; c++) {
+      const v = parseFloat(row[c]), l = raw[1][c];
+      if (l && !isNaN(v) && v !== 0) series[key][l] = v;
+    }
+  }
+  return { contractDates, labels, calLabel, series };
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dz').classList.remove('dg');
+  const f = e.dataTransfer.files[0];
+  if (f) parseXLSX(f);
+}
+
+function handleFile(e) {
+  const f = e.target.files[0];
+  if (f) parseXLSX(f);
+  e.target.value = '';
+}
+
+function parseXLSX(file) {
+  setStatus('<span class="spin"></span>');
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array', cellDates: true });
+      DATA = {};
+      for (const p of PRODS) {
+        const x = parseSheet(wb, p);
+        if (x) DATA[p] = x;
+      }
+      const loaded = Object.keys(DATA);
+      if (!loaded.length) { setStatus('No recognised sheets'); return; }
+      setStatus('Loaded: ' + loaded.join(', '), true);
+      initApp();
+    } catch (err) { setStatus('Error: ' + err.message); }
+  };
+  r.readAsArrayBuffer(file);
+}
+
+
+// =========================================================
+// INIT
+// =========================================================
+function initApp() {
+  const prods = PRODS.filter(p => DATA[p]);
+  cProd   = prods[0] || '';
+  cTenors = [];
+  const dates = obsDates();
+  cStart = dates[dates.length - 1] || '';
+  cEnd   = dates[0] || '';
+  sStart = dates[dates.length - 1] || '';
+  sEnd   = dates[0] || '';
+
+  if (cProd) {
+    const ls = DATA[cProd].series[dates[0]] || {};
+    const hd = tenors(cProd).filter(t => ls[t] !== undefined);
+    cTenors = hd.slice(0, 2);
+  }
+
+  // Default history reference lines: latest + a week ago + a month ago
+  hRefLines = [];
+  const defDays = [0, 7, 30];
+  for (const d of defDays) {
+    const td = new Date(dates[0]);
+    td.setDate(td.getDate() - d);
+    const cd = closest(iso(td), dates);
+    if (cd && !hRefLines.find(r => r.date === cd))
+      hRefLines.push({ date: cd, label: d === 0 ? 'Latest' : d === 7 ? '1 week ago' : '1 month ago' });
+  }
+  switchTab('curve');
+}
+
+
+// =========================================================
+// TAB SWITCH
+// =========================================================
+function switchTab(name) {
+  ['curve', 'spread', 'history', 'welcome'].forEach(t => {
+    document.getElementById('panel-' + t)?.classList.toggle('active', t === name);
+  });
+  ['Curve', 'Spread', 'History'].forEach(n => {
+    document.getElementById('nav' + n)?.classList.toggle('active', name === n.toLowerCase());
+  });
+  buildSC(name);
+  if (name === 'curve')   renderCurve();
+  if (name === 'spread')  { initSpread(); renderSpread(); }
+  if (name === 'history') { buildSC('history'); renderHistory(); }
+}
+
+
+// =========================================================
+// SIDEBAR BUILDER
+// =========================================================
+function buildSC(tab) {
+  const el    = document.getElementById('sc');
+  const prods = PRODS.filter(p => DATA[p]);
+  const dates = obsDates();
+
+  if (tab === 'curve') {
+    const ts = tenors(cProd);
+    const ls = DATA[cProd]?.series[dates[0]] || {};
+    const cl = DATA[cProd]?.calLabel || {};
+
+    el.innerHTML = `
+      <div class="cblk">
+        <div class="clbl">Product</div>
+        <select id="cpP" onchange="onCPC()">
+          ${prods.map(p => `<option value="${p}"${p === cProd ? ' selected' : ''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="cblk">
+        <div class="clbl">Observation date range</div>
+        <div class="dpair">
+          <input type="date" id="cpS" value="${cStart}" onchange="cStart=this.value;renderCurve()">
+          <input type="date" id="cpE" value="${cEnd}"   onchange="cEnd=this.value;renderCurve()">
+        </div>
+      </div>
+      <div class="cblk">
+        <div class="clbl">Contract tenors &mdash; click to add / remove (max 8)</div>
+        <div class="tlist" id="tl">
+          ${ts.map(t => {
+            const sel  = cTenors.includes(t);
+            const ci   = cTenors.indexOf(t);
+            const col  = sel ? TCOLS[ci] : 'var(--text3)';
+            const lv   = ls[t] ? ls[t].toFixed(3) : '';
+            const name = cl[t] || t;
+            return `<label class="tchip${sel ? ' active' : ''}" id="tc-${t.replace(/\s/g, '_')}">
+              <input type="checkbox"${sel ? ' checked' : ''} onchange="toggleT('${t}')">
+              <span class="tdot" style="background:${col}"></span>
+              <span class="tname">${name}</span>
+              <span class="tval">${lv}</span>
+              <button class="trm" onclick="event.preventDefault();toggleT('${t}')">&times;</button>
+            </label>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+  else if (tab === 'spread') {
+    el.innerHTML = `
+      <div class="cblk">
+        <div class="clbl">Observation date range</div>
+        <div class="dpair">
+          <input type="date" id="spS" value="${sStart}" onchange="sStart=this.value;renderSpread()">
+          <input type="date" id="spE" value="${sEnd}"   onchange="sEnd=this.value;renderSpread()">
+        </div>
+      </div>`;
+  }
+  else if (tab === 'history') {
+    el.innerHTML = `
+      <div class="cblk">
+        <div class="clbl">Product</div>
+        <select id="hP" onchange="initHT();renderHistory()">
+          ${prods.map(p => `<option value="${p}">${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="cblk">
+        <div class="clbl">Tenor for snapshot table</div>
+        <select id="hT" onchange="renderHistory()"></select>
+      </div>
+      <div class="cblk">
+        <div class="clbl">Reference curves &mdash; add observation dates</div>
+        <div class="tlist" id="hRefList">
+          ${hRefLines.map((r, i) => `
+            <div class="tchip active" style="cursor:default">
+              <span class="tdot" style="background:${HCOLS[i % HCOLS.length]}"></span>
+              <span class="tname">${r.label}</span>
+              <span class="tval">${r.date}</span>
+              <button class="trm" title="Remove" onclick="removeRef(${i})">&times;</button>
+            </div>`).join('')}
+        </div>
+        <div style="display:flex;gap:5px;margin-top:6px">
+          <select id="hAddDate" style="flex:1;font-size:11px">
+            ${dates.map(d => `<option value="${d}">${d}</option>`).join('')}
+          </select>
+          <button onclick="addRef()" title="Add"
+            style="padding:5px 9px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--green);font-size:16px;cursor:pointer;line-height:1">+</button>
+        </div>
+        <div style="display:flex;gap:5px;margin-top:5px">
+          <button onclick="addPreset(0)"  style="flex:1;${presetBtnStyle()}">Today</button>
+          <button onclick="addPreset(7)"  style="flex:1;${presetBtnStyle()}">&minus;1w</button>
+          <button onclick="addPreset(30)" style="flex:1;${presetBtnStyle()}">&minus;1m</button>
+          <button onclick="addPreset(90)" style="flex:1;${presetBtnStyle()}">&minus;3m</button>
+        </div>
+        <div style="display:flex;gap:5px;margin-top:4px">
+          <button onclick="addPreset(180)" style="flex:1;${presetBtnStyle()}">&minus;6m</button>
+          <button onclick="addPreset(365)" style="flex:1;${presetBtnStyle()}">&minus;1y</button>
+          <button onclick="hRefLines=[];buildSC('history');renderHistory()"
+            style="flex:1;${presetBtnStyle('var(--red)')}">Clear</button>
+        </div>
+      </div>`;
+    initHT();
+  }
+  else { el.innerHTML = ''; }
+}
+
+function presetBtnStyle(col = 'var(--text2)') {
+  return `font-size:10.5px;padding:4px 2px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:${col};font-family:var(--fui);cursor:pointer;`;
+}
+
+function addRef() {
+  const date = document.getElementById('hAddDate')?.value;
+  if (!date) return;
+  if (hRefLines.find(r => r.date === date)) return;
+  hRefLines.push({ date, label: date });
+  buildSC('history');
+  renderHistory();
+}
+
+function addPreset(days) {
+  const dates = obsDates();
+  const td = new Date(dates[0]);
+  td.setDate(td.getDate() - days);
+  const cd = closest(iso(td), dates);
+  if (!cd) return;
+  if (hRefLines.find(r => r.date === cd)) return;
+  const label =
+    days === 0   ? 'Latest'       :
+    days === 1   ? '1 day ago'    :
+    days === 7   ? '1 week ago'   :
+    days === 30  ? '1 month ago'  :
+    days === 90  ? '3 months ago' :
+    days === 180 ? '6 months ago' :
+    days === 365 ? '1 year ago'   : `${days}d ago`;
+  hRefLines.push({ date: cd, label });
+  buildSC('history');
+  renderHistory();
+}
+
+function removeRef(i) {
+  hRefLines.splice(i, 1);
+  buildSC('history');
+  renderHistory();
+}
+
+
+// =========================================================
+// HISTORY VIEW
+// =========================================================
+// X axis = contract months as "Mon YY" from row 0 contractDates
+// Lines  = forward curve snapshots at user-chosen observation dates
+function initHT() {
+  const p = document.getElementById('hP')?.value;
+  if (!p || !DATA[p]) return;
+  const cl = DATA[p]?.calLabel || {};
+  document.getElementById('hT').innerHTML =
+    tenors(p).map(t => `<option value="${t}">${cl[t] || t}</option>`).join('');
+}
+
+function renderHistory() {
+  const p = document.getElementById('hP')?.value;
+  const t = document.getElementById('hT')?.value;
+  if (!p || !t || !DATA[p]) return;
+
+  const allDts   = obsDates();
+  const datasets = [], legItems = [], rows = [];
+
+  // x-axis: tenors that have data on the latest date, displayed as "Mon YY"
+  const ls      = DATA[p].series[allDts[0]] || {};
+  const xTenors = tenors(p).filter(ten => ls[ten] !== undefined);
+  const calLbl  = DATA[p].calLabel || {};
+  const xLabels = xTenors.map(ten => calLbl[ten] || ten);
+  const refPrice = ls[t];
+
+  for (let i = 0; i < hRefLines.length; i++) {
+    const { date: cd, label: rl } = hRefLines[i];
+    const s    = DATA[p].series[cd] || {};
+    const vals = xTenors.map(ten => s[ten] ?? null);
+    if (vals.every(v => v === null)) continue;
+
+    const col = HCOLS[i % HCOLS.length];
+    const bw  = i === 0 ? 2.5 : 1.5;
+    const pr  = i === 0 ? 3   : 1.5;
+    const bd  = i === 0 ? []  : [5, 4];
+
+    datasets.push({ label: rl, data: vals, borderColor: col, backgroundColor: 'transparent',
+      borderWidth: bw, pointRadius: pr, tension: .35, borderDash: bd, spanGaps: true });
+    legItems.push(`<span class="li"><span class="ld" style="background:${col}"></span>${rl} <span style="color:var(--text3);font-size:10px">${cd}</span></span>`);
+
+    const price = s[t];
+    const chg   = price !== undefined && refPrice !== undefined && i > 0 ? price - refPrice : null;
+    rows.push(`<tr>
+      <td><span style="display:inline-block;width:6px;height:6px;border-radius:2px;background:${col};margin-right:6px;vertical-align:middle"></span>${rl}</td>
+      <td>${cd}</td>
+      <td>${price !== undefined ? price.toFixed(3) : '&mdash;'}</td>
+      <td>${chg !== null ? `<span class="${chg >= 0 ? 'cp' : 'cn'}">${chg >= 0 ? '+' : ''}${chg.toFixed(3)}</span>` : '&mdash;'}</td>
+    </tr>`);
+  }
+
+  document.getElementById('hLeg').innerHTML  = legItems.join('');
+  document.getElementById('hMeta').textContent = `${p} \u2014 ${calLbl[t] || t}`;
+
+  killChart('hChart');
+  if (datasets.length) {
+    charts['hChart'] = new Chart(document.getElementById('hChart'), {
+      type: 'line',
+      data: { labels: xLabels, datasets },
+      options: mkO({ mode: 'index' }),
+    });
+  }
+
+  document.getElementById('hTable').innerHTML = rows.length
+    ? `<table class="ht">
+        <thead><tr><th>Reference</th><th>Date</th><th>${calLbl[t] || t}</th><th>vs first</th></tr></thead>
+        <tbody>${rows.join('')}</tbody>
+       </table>`
+    : `<div style="color:var(--text3);font-size:12px;padding:20px 0;text-align:center">Add reference dates in the sidebar</div>`;
+}
+
+
+// =========================================================
+// TENOR VIEWER CALLBACKS
+// =========================================================
+function onCPC() {
+  cProd   = document.getElementById('cpP').value;
+  cTenors = [];
+  const dates = obsDates();
+  const ls    = DATA[cProd]?.series[dates[0]] || {};
+  cTenors = tenors(cProd).filter(t => ls[t] !== undefined).slice(0, 2);
+  buildSC('curve');
+  renderCurve();
+}
+
+function toggleT(t) {
+  if (cTenors.includes(t)) cTenors = cTenors.filter(x => x !== t);
+  else if (cTenors.length < 8) cTenors.push(t);
+  buildSC('curve');
+  renderCurve();
+}
+
+
+// =========================================================
+// TENOR VIEWER RENDER
+// =========================================================
+// X axis = observation dates (calendar days, one per row in Excel)
+// Y axis = price
+// Lines  = selected tenors (contract months)
+function renderCurve() {
+  if (!cProd || !DATA[cProd]) return;
+  const allDts = obsDates();
+  // Filter to selected date range, then reverse to chronological order
+  const dts = allDts.filter(d => d >= cStart && d <= cEnd).reverse();
+
+  if (!cTenors.length) {
+    document.getElementById('cLeg').innerHTML   = '';
+    document.getElementById('cMeta').textContent = '';
+    document.getElementById('cStats').innerHTML  =
+      `<span style="color:var(--text3);font-size:12px">Select tenors in the sidebar</span>`;
+    killChart('cChart');
+    return;
+  }
+
+  const datasets = [], legItems = [], statItems = [];
+  const calLblC  = DATA[cProd]?.calLabel || {};
+
+  for (let i = 0; i < cTenors.length; i++) {
+    const t   = cTenors[i];
+    const col = TCOLS[i % TCOLS.length];
+    const displayName = calLblC[t] || t;
+    const pts = dts.map(d => {
+      const v = DATA[cProd].series[d]?.[t];
+      return v !== undefined ? v : null;
+    });
+    datasets.push({ label: displayName, data: pts, borderColor: col, backgroundColor: col + '18',
+      borderWidth: 2, pointRadius: 2, tension: .3, fill: false, spanGaps: true });
+    legItems.push(`<span class="li"><span class="ld" style="background:${col}"></span>${displayName}</span>`);
+
+    // stat: last non-null value + 1-day change
+    const li   = pts.findLastIndex(v => v !== null);
+    const lv   = li >= 0 ? pts[li] : null;
+    const prev = li > 0  ? pts.slice(0, li).findLast(v => v !== null) : null;
+    const chg  = lv !== null && prev !== null ? lv - prev : null;
+    statItems.push(`<div class="stat">
+      <div class="slb" style="color:${col}">${displayName}</div>
+      <div class="sv ${chg === null ? '' : chg >= 0 ? 'up' : 'dn'}">${lv !== null ? lv.toFixed(3) : '&mdash;'}</div>
+      <div class="ss">${chg !== null ? (chg >= 0 ? '\u25b2 +' : '\u25bc ') + chg.toFixed(3) : ''}</div>
+    </div>`);
+  }
+
+  document.getElementById('cLeg').innerHTML   = legItems.join('');
+  document.getElementById('cMeta').textContent = `${cProd} \u00b7 ${cStart} \u2192 ${cEnd}`;
+  document.getElementById('cStats').innerHTML  = statItems.join('');
+
+  killChart('cChart');
+  charts['cChart'] = new Chart(document.getElementById('cChart'), {
+    type: 'line',
+    data: { labels: dts, datasets },
+    options: mkO({ mode: 'index' }),
+  });
+}
+
+
+// =========================================================
+// SPREAD VIEW
+// =========================================================
+function initSpread() {
+  const prods = PRODS.filter(p => DATA[p]);
+  const opts  = prods.map(p => `<option value="${p}">${p}</option>`).join('');
+  document.getElementById('s1P').innerHTML = opts;
+  document.getElementById('s2P').innerHTML = opts;
+  if (prods.length >= 2) document.getElementById('s2P').value = prods[1];
+  fillST(1);
+  fillST(2);
+}
+
+function onSPC(leg) { fillST(leg); renderSpread(); }
+
+function fillST(leg) {
+  const p  = document.getElementById(`s${leg}P`).value;
+  const cl = DATA[p]?.calLabel || {};
+  document.getElementById(`s${leg}T`).innerHTML =
+    tenors(p).map(t => `<option value="${t}">${cl[t] || t}</option>`).join('');
+}
+
+function renderSpread() {
+  const p1 = document.getElementById('s1P')?.value;
+  const t1 = document.getElementById('s1T')?.value;
+  const p2 = document.getElementById('s2P')?.value;
+  const t2 = document.getElementById('s2T')?.value;
+  if (!p1 || !p2 || !DATA[p1] || !DATA[p2]) return;
+
+  const dts    = obsDates().filter(d => d >= sStart && d <= sEnd).reverse();
+  const labels = [], data = [];
+  for (const d of dts) {
+    const v1 = DATA[p1].series[d]?.[t1];
+    const v2 = DATA[p2].series[d]?.[t2];
+    if (v1 !== undefined && v2 !== undefined) {
+      labels.push(d);
+      data.push(+(v1 - v2).toFixed(4));
+    }
+  }
+
+  const cur = data[data.length - 1];
+  const chg = data.length > 1 ? cur - data[data.length - 2] : null;
+  const min = data.length ? Math.min(...data).toFixed(3) : '&mdash;';
+  const max = data.length ? Math.max(...data).toFixed(3) : '&mdash;';
+
+  const cl1 = DATA[p1]?.calLabel || {};
+  const cl2 = DATA[p2]?.calLabel || {};
+  document.getElementById('sMeta').textContent = `${p1} ${cl1[t1] || t1} \u2212 ${p2} ${cl2[t2] || t2}`;
+  document.getElementById('sStats').innerHTML = `
+    <div class="stat"><div class="slb">Current</div><div class="sv ${cur >= 0 ? 'up' : 'dn'}">${cur !== undefined ? cur.toFixed(3) : '&mdash;'}</div></div>
+    <div class="stat"><div class="slb">1-day chg</div><div class="sv ${chg === null ? '' : chg >= 0 ? 'up' : 'dn'}">${chg !== null ? (chg >= 0 ? '+' : '') + chg.toFixed(3) : '&mdash;'}</div></div>
+    <div class="stat"><div class="slb">Min</div><div class="sv">${min}</div></div>
+    <div class="stat"><div class="slb">Max</div><div class="sv">${max}</div></div>`;
+
+  killChart('stsChart');
+  charts['stsChart'] = new Chart(document.getElementById('stsChart'), {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Spread', data, borderColor: '#3a9dff',
+      backgroundColor: '#3a9dff14', borderWidth: 1.5, pointRadius: 1.5, tension: .3,
+      fill: true, spanGaps: true }] },
+    options: mkO({ y0line: true }),
+  });
+
+  // Curve spread at latest date within the selected range
+  const ld = labels[labels.length - 1] || obsDates()[0];
+  if (!ld) return;
+  const s1 = DATA[p1].series[ld] || {};
+  const s2 = DATA[p2].series[ld] || {};
+  const calLbl1 = DATA[p1].calLabel || {};
+  const cl = [], clDisplay = [], cd = [];
+  for (const t of tenors(p1)) {
+    if (s1[t] !== undefined && s2[t] !== undefined) {
+      cl.push(t);
+      clDisplay.push(calLbl1[t] || t);
+      cd.push(+(s1[t] - s2[t]).toFixed(4));
+    }
+  }
+  document.getElementById('scMeta').textContent = ld;
+  killChart('scChart');
+  charts['scChart'] = new Chart(document.getElementById('scChart'), {
+    type: 'bar',
+    data: {
+      labels: clDisplay,
+      datasets: [{ label: 'Spread', data: cd,
+        backgroundColor: cd.map(v => v >= 0 ? '#00d48a2a' : '#ff6f3c2a'),
+        borderColor:      cd.map(v => v >= 0 ? '#00d48a'   : '#ff6f3c'),
+        borderWidth: 1 }],
+    },
+    options: mkO({ bar: true, y0line: true }),
+  });
+}
+
+
+// =========================================================
+// CHART OPTIONS FACTORY
+// =========================================================
+function mkO({ mode = 'nearest', bar = false, y0line = false } = {}) {
+  const gc = 'rgba(255,255,255,0.045)', tc = '#363e58';
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 220 },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        mode, intersect: false,
+        backgroundColor: '#191d28',
+        borderColor: 'rgba(255,255,255,0.09)',
+        borderWidth: 1,
+        titleColor: '#dce0ed',
+        bodyColor: '#68718f',
+        padding: 10,
+        titleFont: { family: "'DM Mono',monospace", size: 11.5 },
+        bodyFont:  { family: "'DM Mono',monospace", size: 11 },
+      },
+    },
+    scales: {
+      x: {
+        ticks: { color: tc, font: { size: 10 }, maxRotation: 45, autoSkip: true, maxTicksLimit: bar ? 22 : 18 },
+        grid:  { color: gc },
+      },
+      y: {
+        ticks: { color: tc, font: { size: 10.5 } },
+        grid:  { color: y0line ? ctx => ctx.tick.value === 0 ? 'rgba(255,255,255,0.16)' : gc : gc },
+      },
+    },
+  };
+}
+
+
+// =========================================================
+// SAMPLE DATA
+// =========================================================
+function loadSample() {
+  const MC = ['F','G','H','J','K','M','N','Q','U','V','X','Z'];
+
+  function mk(base, noise, pfx) {
+    const labels = [], contractDates = [], calLabel = {};
+    for (let y = 2025; y <= 2028; y++) {
+      for (let m = 0; m < 12; m++) {
+        const lbl = `${pfx}${MC[m]}${String(y).slice(2)}`;
+        const cd  = new Date(y, m, 1);
+        labels.push(lbl);
+        contractDates.push(cd);
+        calLabel[lbl] = pfx.trim() + ' ' + fmtCal(cd);
+      }
+    }
+    const series = {};
+    let prices = labels.map((_, i) => Math.max(.5, base + i * noise * .07 + (Math.random() - .5) * noise));
+    for (let ago = 399; ago >= 0; ago--) {
+      const d = new Date();
+      d.setDate(d.getDate() - ago);
+      if (d.getDay() === 0 || d.getDay() === 6) continue;
+      const key = iso(d);
+      series[key] = {};
+      prices = prices.map((p, i) => Math.max(.5, p + (Math.random() - .495) * noise * (1 + i * .006)));
+      labels.forEach((l, i) => { series[key][l] = +prices[i].toFixed(3); });
+    }
+    return { labels, contractDates, calLabel, series };
+  }
+
+  DATA = {
+    HH:    mk(3.1,  .22, 'XHH'),
+    TTF:   mk(45,   3.2, 'TTF'),
+    TFU:   mk(15.5, 1.4, 'TFU'),
+    JKM:   mk(17,   1.9, 'JKM'),
+    Brent: mk(82,   4.8, 'BRN'),
+  };
+  setStatus('Sample data loaded \u2014 400 trading days', true);
+  initApp();
+}
+</script>
+</body>
+</html>
