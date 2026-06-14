@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>China Gas Market Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>China Gas Market — <span>2025 Baseline &amp; Scenario Model</span></h1>
+    <p>Supply &amp; Demand Analysis | Scenario Model 2026–2027 | Sources: SIA Energy · S&amp;P Global (Apr 2026) | Base year: 430 Bcm</p>
+  </div>
+  <div class="header-badge">COMBINED DASHBOARD</div>
+</div>
+
+<div class="tabs">
+  <!-- ── Dashboard 1 tabs ── -->
+  <button class="tab active" onclick="show('overview',this)">Overview</button>
+  <button class="tab" onclick="show('demand',this)">Demand by sector</button>
+  <button class="tab" onclick="show('regional',this)">Regional demand</button>
+  <button class="tab" onclick="show('supply',this)">Supply sources</button>
+  <button class="tab" onclick="show('trucked',this)">Trucked LNG</button>
+  <button class="tab" onclick="show('outlook',this)">Outlook &amp; risks</button>
+  <!-- ── Visual separator ── -->
+  <div class="tab-group-sep"></div>
+  <!-- ── Scenario model tabs (from Dashboard 2) ── -->
+  <button class="tab" onclick="show('monthly26',this)">2026 monthly</button>
+  <button class="tab" onclick="show('monthly27',this)">2027 monthly</button>
+  <button class="tab" onclick="show('triggers',this)">Monthly triggers</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ OVERVIEW -->
+<div class="panel active" id="panel-overview">
+  <div class="metrics">
+    <div class="metric blue"><div class="m-label">TOTAL GAS DEMAND</div><div class="m-val">430</div><div class="m-sub">Bcm in 2025 · +1.6% YOY</div></div>
+    <div class="metric teal"><div class="m-label">DOMESTIC PRODUCTION</div><div class="m-val">266</div><div class="m-sub">Bcm · 62% of supply</div></div>
+    <div class="metric amber"><div class="m-label">LNG IMPORTS (NET)</div><div class="m-val">66.7</div><div class="m-sub">mmt · −14% YOY</div></div>
+    <div class="metric coral"><div class="m-label">PIPELINE IMPORTS</div><div class="m-val">82</div><div class="m-sub">Bcm · +8% YOY</div></div>
+    <div class="metric green"><div class="m-label">TRUCKED LNG</div><div class="m-val">39.7</div><div class="m-sub">mmt · 12.7% of demand</div></div>
+    <div class="metric purple"><div class="m-label">GAS-FIRED CAPACITY</div><div class="m-val">163</div><div class="m-sub">GW · +20 GW in 2025</div></div>
+  </div>
+
+  <div class="insight">
+    China's gas system is structured around three supply tiers: <strong>domestic production</strong> from western basins (cheapest, policy priority), <strong>pipeline imports</strong> from Russia and Central Asia (semi-rigid, contract-bound), and <strong>LNG imports</strong> via coastal terminals (most flexible, most expensive — the swing variable). LNG is priced last, cut first when demand weakens, and purchased aggressively when markets tighten.
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Supply stack (Bcm equivalent)</div>
+      <div class="data-row"><div class="dot" style="background:var(--blue)"></div><div class="name">Domestic production</div><div class="bar-wrap"><div class="bar-fill" style="width:61%;background:var(--blue)"></div></div><div class="vol">266 Bcm</div><div class="pct">62%</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--teal)"></div><div class="name">LNG imports (~91 Bcm eq.)</div><div class="bar-wrap"><div class="bar-fill" style="width:21%;background:var(--teal)"></div></div><div class="vol">91 Bcm</div><div class="pct">21%</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--amber)"></div><div class="name">Pipeline imports</div><div class="bar-wrap"><div class="bar-fill" style="width:19%;background:var(--amber)"></div></div><div class="vol">82 Bcm</div><div class="pct">19%</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Demand sectors (Bcm)</div>
+      <div class="data-row"><div class="dot" style="background:var(--coral)"></div><div class="name">Industrial</div><div class="bar-wrap"><div class="bar-fill" style="width:40%;background:var(--coral)"></div></div><div class="vol">174 Bcm</div><div class="pct">40%</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--blue)"></div><div class="name">Power &amp; heating</div><div class="bar-wrap"><div class="bar-fill" style="width:21%;background:var(--blue)"></div></div><div class="vol">90 Bcm</div><div class="pct">21%</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--purple)"></div><div class="name">Residential</div><div class="bar-wrap"><div class="bar-fill" style="width:15%;background:var(--purple)"></div></div><div class="vol">65 Bcm</div><div class="pct">15%</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--teal)"></div><div class="name">Commercial / services</div><div class="bar-wrap"><div class="bar-fill" style="width:12%;background:var(--teal)"></div></div><div class="vol">52 Bcm</div><div class="pct">12%</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--amber)"></div><div class="name">Transport (LNG trucks)</div><div class="bar-wrap"><div class="bar-fill" style="width:7%;background:var(--amber)"></div></div><div class="vol">30 Bcm</div><div class="pct">7%</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--muted)"></div><div class="name">Losses / own-use</div><div class="bar-wrap"><div class="bar-fill" style="width:5%;background:var(--muted)"></div></div><div class="vol">22 Bcm</div><div class="pct">5%</div></div>
+    </div>
+  </div>
+
+  <div class="section-lbl">Hydropower → gas equivalence</div>
+  <div class="card">
+    <div class="card-title">Dispatch substitution rule of thumb</div>
+    <table class="hydro-table">
+      <thead><tr><th>Hydro shortfall</th><th>Lost generation</th><th>Gas replacement</th><th>LNG cargoes equiv.</th></tr></thead>
+      <tbody>
+        <tr><td>1 GW at avg utilisation (3,000 hrs/yr)</td><td>3.0 TWh/yr</td><td>~0.6 Bcm/yr</td><td>~7 cargoes</td></tr>
+        <tr><td>5 GW — moderate drought</td><td>15 TWh/yr</td><td>~3.0 Bcm/yr</td><td>~33 cargoes</td></tr>
+        <tr><td>10 GW — severe drought</td><td>30 TWh/yr</td><td>~6.0 Bcm/yr</td><td>~67 cargoes</td></tr>
+        <tr><td>Q3 2025 actual (−10% hydro output)</td><td>~40 TWh</td><td>~8 Bcm gas filled</td><td>~89 cargoes</td></tr>
+      </tbody>
+    </table>
+    <div style="font-size:10.5px;color:var(--muted);margin-top:10px;">Gas-fired power avg utilisation: 25% load factor (2,100 hrs/yr) in 2025. Coal dispatched first; gas is the marginal peaker. 1 cargo ≈ 65,000 t ≈ 0.09 Bcm.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ DEMAND -->
+<div class="panel" id="panel-demand">
+  <div class="insight">
+    Total actual gas consumption: <strong>429.7 Bcm in 2025</strong>, +1.6% YOY — a sharp deceleration from 8.3% in 2024. Industrial (40%) was the <em>only</em> contracting sector (−3% YOY) as real-estate construction stalled and trade uncertainty dampened factory output. Power generation and transportation were the standout growers.
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Annual gas consumption by sector (2020–2025, Bcm)</div>
+      <div class="chart-wrap" style="height:260px;"><canvas id="sectorHistChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">2025 sector share</div>
+      <div class="chart-wrap" style="height:260px;"><canvas id="sectorPieChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-lbl">YOY incremental demand 2025 (Bcm)</div>
+  <div class="card">
+    <div class="card-title">Waterfall — 417 Bcm (2024) → 429.7 Bcm (2025)</div>
+    <div class="chart-wrap" style="height:180px;"><canvas id="waterfallChart"></canvas></div>
+  </div>
+
+  <div class="section-lbl">Sector sub-components</div>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title" style="color:var(--coral);">Industrial — 174 Bcm</div>
+      <div class="data-row"><div class="name">Chemicals &amp; fertilisers</div><div class="bar-wrap"><div class="bar-fill" style="width:35%;background:var(--coral)"></div></div><div class="vol">~61</div></div>
+      <div class="data-row"><div class="name">Steel &amp; metals</div><div class="bar-wrap"><div class="bar-fill" style="width:22%;background:var(--coral)"></div></div><div class="vol">~38</div></div>
+      <div class="data-row"><div class="name">Ceramics / glass / bldg</div><div class="bar-wrap"><div class="bar-fill" style="width:17%;background:var(--coral)"></div></div><div class="vol">~30</div></div>
+      <div class="data-row"><div class="name">Paper / food / other mfg</div><div class="bar-wrap"><div class="bar-fill" style="width:26%;background:#f97316aa"></div></div><div class="vol">~45</div></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);">Down ~5 Bcm YOY — real-estate slump + trade uncertainty suppressed industrial activity</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--blue);">Power &amp; heating — 90 Bcm</div>
+      <div class="data-row"><div class="name">Gas-fired power gen.</div><div class="bar-wrap"><div class="bar-fill" style="width:75%;background:var(--blue)"></div></div><div class="vol">~68</div></div>
+      <div class="data-row"><div class="name">District heating</div><div class="bar-wrap"><div class="bar-fill" style="width:25%;background:var(--lblue)"></div></div><div class="vol">~22</div></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);">339 TWh generated in 2025 (+6% YOY); 163 GW capacity at 25% avg utilisation. Key: Guangdong, Jiangsu, Zhejiang, Sichuan</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--amber);">Transport — 30 Bcm</div>
+      <div class="data-row"><div class="name">LNG heavy-duty trucks</div><div class="bar-wrap"><div class="bar-fill" style="width:80%;background:var(--amber)"></div></div><div class="vol">~24</div></div>
+      <div class="data-row"><div class="name">Buses / vessels / bunker</div><div class="bar-wrap"><div class="bar-fill" style="width:20%;background:#fbbf24"></div></div><div class="vol">~6</div></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);">Fastest growing sector: +14% YOY. LNG HDV sales +11.2%. Cost competitiveness vs diesel drives rapid adoption.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ REGIONAL -->
+<div class="panel" id="panel-regional">
+  <div class="insight">
+    China's gas demand maps onto four macro-regions totalling 430 Bcm. The coastal East + South belt (59%) is served primarily by LNG imports. North China is the most seasonal market (3–4x winter/summer swing), increasingly supplied by Russian POS-1. The Southwest is unique — Sichuan is both China's top shale gas producer and a major power-sector consumer.
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">Regional demand breakdown — 430 Bcm (2025)</div>
+    <div class="chart-wrap" style="height:280px;"><canvas id="regionalChart"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title" style="color:var(--blue);">East China — 160 Bcm (37%)</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Jiangsu · Zhejiang · Shanghai · Shandong · Fujian</div>
+      <div class="data-row"><div class="name">Industrial (chemicals, mfg)</div><div class="bar-wrap"><div class="bar-fill" style="width:50%;background:var(--blue)"></div></div><div class="vol">~80</div></div>
+      <div class="data-row"><div class="name">Power &amp; heating</div><div class="bar-wrap"><div class="bar-fill" style="width:25%;background:var(--lblue)"></div></div><div class="vol">~40</div></div>
+      <div class="data-row"><div class="name">Residential &amp; commercial</div><div class="bar-wrap"><div class="bar-fill" style="width:25%;background:#93c5fd"></div></div><div class="vol">~40</div></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);">Primary supply: LNG via Jiangsu Rudong, Zhoushan, Shanghai terminals (~120 MMtpa) + WEP + POS-1 (reaching Shanghai 2024)</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--coral);">South China — 95 Bcm (22%)</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Guangdong · Guangxi · Hainan · Yunnan · Guizhou</div>
+      <div class="data-row"><div class="name">Gas-fired power (Guangdong)</div><div class="bar-wrap"><div class="bar-fill" style="width:45%;background:var(--coral)"></div></div><div class="vol">~43</div></div>
+      <div class="data-row"><div class="name">Industrial</div><div class="bar-wrap"><div class="bar-fill" style="width:35%;background:#fb923c"></div></div><div class="vol">~33</div></div>
+      <div class="data-row"><div class="name">Residential &amp; commercial</div><div class="bar-wrap"><div class="bar-fill" style="width:20%;background:#fed7aa"></div></div><div class="vol">~19</div></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);">CNOOC-dominant LNG market; Myanmar pipeline supplies Yunnan/Guizhou. Highest summer peak for gas power.</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--teal);">North China — 90 Bcm (21%)</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Beijing · Hebei · Tianjin · Liaoning · Shandong</div>
+      <div class="data-row"><div class="name">Heating &amp; residential (winter)</div><div class="bar-wrap"><div class="bar-fill" style="width:45%;background:var(--teal)"></div></div><div class="vol">~41</div></div>
+      <div class="data-row"><div class="name">Industrial</div><div class="bar-wrap"><div class="bar-fill" style="width:30%;background:#2dd4bf"></div></div><div class="vol">~27</div></div>
+      <div class="data-row"><div class="name">Power (lower share)</div><div class="bar-wrap"><div class="bar-fill" style="width:25%;background:#99f6e4"></div></div><div class="vol">~22</div></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);">Russian POS-1 increasingly competitive vs LNG. Winter peak 3–4x summer trough. 53.8 MMtpa terminal capacity (Bohai Bay).</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--purple);">SW &amp; Interior — 85 Bcm (20%)</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Sichuan · Chongqing · Shaanxi · Hubei · Xinjiang</div>
+      <div class="data-row"><div class="name">Industrial (chemicals, ceramics)</div><div class="bar-wrap"><div class="bar-fill" style="width:40%;background:var(--purple)"></div></div><div class="vol">~34</div></div>
+      <div class="data-row"><div class="name">Power (Sichuan gas-fired)</div><div class="bar-wrap"><div class="bar-fill" style="width:30%;background:#a78bfa"></div></div><div class="vol">~26</div></div>
+      <div class="data-row"><div class="name">Residential &amp; heating</div><div class="bar-wrap"><div class="bar-fill" style="width:30%;background:#c4b5fd"></div></div><div class="vol">~25</div></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);">Sichuan: top shale gas producer AND top gas-power consumer. Xinjiang receives Central Asian CAGP gas. Trucked LNG penetrates off-grid areas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ SUPPLY -->
+<div class="panel" id="panel-supply">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Supply 2024 vs 2025 (Bcm)</div>
+      <div class="chart-wrap" style="height:240px;"><canvas id="supplyBarChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pipeline imports by source — 82 Bcm</div>
+      <div class="chart-wrap" style="height:240px;"><canvas id="pipelineChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">LNG imports by origin — 66.7 mmt net</div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="lngOriginChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Domestic production by type — 266 Bcm</div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="domProdChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-lbl">Supply failover logic</div>
+  <div class="card">
+    <div class="card-title">What happens when each source fails</div>
+    <div class="failover-item">
+      <div class="failover-dot" style="background:var(--amber)"></div>
+      <div class="failover-content">
+        <strong>LNG disruption (Hormuz closure / terminal outage)</strong>
+        <p>Activate underground gas storage (UGS) withdrawal; boost domestic production; coal substitution in power dispatch; delay storage injections; redirect POS-1 south; throttle re-exports.</p>
+      </div>
+    </div>
+    <div class="failover-item">
+      <div class="failover-dot" style="background:var(--coral)"></div>
+      <div class="failover-content">
+        <strong>Central Asia pipeline disruption (CAGP cut)</strong>
+        <p>Increase LNG spot purchases via coastal terminals; draw on Xinjiang domestic fields; reroute West-East Pipeline flow. Kazakhstan cut all exports in March 2025 — LNG filled within days.</p>
+      </div>
+    </div>
+    <div class="failover-item">
+      <div class="failover-dot" style="background:var(--blue)"></div>
+      <div class="failover-content">
+        <strong>Hydro shortfall (summer drought — Sichuan/Yunnan)</strong>
+        <p>Dispatch gas-fired peakers (Guangdong, Jiangsu lead); coal ramp-up as secondary; demand response in industrial sector; throttle LNG re-exports to retain domestic supply. 1 GW hydro down ≈ 7 spot LNG cargoes.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ TRUCKED -->
+<div class="panel" id="panel-trucked">
+  <div class="metrics" style="grid-template-columns:repeat(4,1fr);">
+    <div class="metric amber"><div class="m-label">TOTAL TRUCKED LNG</div><div class="m-val">39.7</div><div class="m-sub">mmt · +4.7% YOY</div></div>
+    <div class="metric teal"><div class="m-label">LAND-BASED PLANTS</div><div class="m-val">25.6</div><div class="m-sub">mmt · 64% share · +12.4%</div></div>
+    <div class="metric blue"><div class="m-label">EX-TERMINAL</div><div class="m-val">14.2</div><div class="m-sub">mmt · 36% share · −6.9%</div></div>
+    <div class="metric coral"><div class="m-label">% OF TOTAL DEMAND</div><div class="m-val">12.7%</div><div class="m-sub">19% of 2025 incremental</div></div>
+  </div>
+
+  <div class="insight">
+    Trucked LNG is China's "last mile" solution for off-pipeline industrial parks, remote areas, and LNG-fueled vehicles. Two supply chains: <strong>ex-terminal</strong> (LNG from import terminals trucked inland — declining as import prices elevated) and <strong>land-based liquefaction plants</strong> (small-scale plants fed by CNPC pipeline gas or coke-oven gas in coal-heavy inland provinces — now 64% and growing). When import LNG is expensive, the market naturally shifts inland, insulating China from spot price shocks.
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Annual trucked LNG supply (mmt)</div>
+      <div class="chart-wrap" style="height:240px;"><canvas id="truckedChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Land-based production by region (2025, mmt)</div>
+      <div class="chart-wrap" style="height:240px;"><canvas id="truckedRegionChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Feed gas source — land-based plants (2025)</div>
+      <div class="data-row"><div class="dot" style="background:var(--teal)"></div><div class="name">CNPC pipeline gas</div><div class="bar-wrap"><div class="bar-fill" style="width:56%;background:var(--teal)"></div></div><div class="vol">14.2 mmt</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--amber)"></div><div class="name">Coke-oven gas (COG)</div><div class="bar-wrap"><div class="bar-fill" style="width:19%;background:var(--amber)"></div></div><div class="vol">4.7 mmt</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--muted)"></div><div class="name">Others (biogas, etc.)</div><div class="bar-wrap"><div class="bar-fill" style="width:12%;background:var(--muted)"></div></div><div class="vol">3.1 mmt</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--purple)"></div><div class="name">Coalbed methane (CBM)</div><div class="bar-wrap"><div class="bar-fill" style="width:8%;background:var(--purple)"></div></div><div class="vol">2.1 mmt</div></div>
+      <div class="data-row"><div class="dot" style="background:var(--lblue)"></div><div class="name">Sinopec pipeline gas</div><div class="bar-wrap"><div class="bar-fill" style="width:5%;background:var(--lblue)"></div></div><div class="vol">1.4 mmt</div></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);">COG growth driven by cost advantage vs imported LNG. Unsustainable if LNG spot prices fall below ~$10/MMBtu.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">End-use of trucked LNG</div>
+      <div class="failover-item">
+        <div class="failover-dot" style="background:var(--coral)"></div>
+        <div class="failover-content"><strong>LNG heavy-duty trucks (HDV)</strong><p>Largest and fastest-growing end use. Sales +11.2% in 2025. Cost advantage vs diesel especially below CNY 5/kg trucked LNG.</p></div>
+      </div>
+      <div class="failover-item">
+        <div class="failover-dot" style="background:var(--blue)"></div>
+        <div class="failover-content"><strong>Off-pipeline industrial users</strong><p>Ceramic, glass, food processing parks in inland provinces not connected to the gas grid.</p></div>
+      </div>
+      <div class="failover-item">
+        <div class="failover-dot" style="background:var(--teal)"></div>
+        <div class="failover-content"><strong>Peak shaving / local storage</strong><p>Trucked LNG tanks as buffer storage at industrial parks and city-gate stations in winter.</p></div>
+      </div>
+      <div class="failover-item">
+        <div class="failover-dot" style="background:var(--amber)"></div>
+        <div class="failover-content"><strong>Marine bunkering</strong><p>Shanghai, Shenzhen, Ningbo-Zhoushan collectively 0.70 mmt in 2025; growing with IMO regulations.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ OUTLOOK -->
+<div class="panel" id="panel-outlook">
+  <div class="metrics" style="grid-template-columns:repeat(4,1fr);">
+    <div class="metric blue"><div class="m-label">LNG DEMAND PEAK</div><div class="m-val">135 mmt</div><div class="m-sub">~2031 revised (from 143)</div></div>
+    <div class="metric red"><div class="m-label">2026 LNG TREND</div><div class="m-val">↓ 2nd yr</div><div class="m-sub">First consecutive decline ever</div></div>
+    <div class="metric amber"><div class="m-label">SUPPLY GAP OPENS</div><div class="m-val">2029–30</div><div class="m-sub">Without new LNG contracts</div></div>
+    <div class="metric green"><div class="m-label">AVG DEMAND GROWTH</div><div class="m-val">~5%/yr</div><div class="m-sub">2026–2030 base case</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">LNG demand forecast vs contracted supply (mmt)</div>
+    <div class="chart-wrap" style="height:220px;"><canvas id="outlookChart"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title" style="color:var(--green);">Demand growth drivers (bullish)</div>
+      <div class="failover-item"><div class="failover-dot" style="background:var(--green)"></div><div class="failover-content"><strong>Industrial coal-to-gas switching</strong><p>15th FYP carbon peaking 2030 mandate forces heavy industry away from coal boilers.</p></div></div>
+      <div class="failover-item"><div class="failover-dot" style="background:var(--green)"></div><div class="failover-content"><strong>Gas-fired power additions (~20 GW/yr)</strong><p>Peaker role grows as intermittent renewables expand; flexibility premium rises.</p></div></div>
+      <div class="failover-item"><div class="failover-dot" style="background:var(--green)"></div><div class="failover-content"><strong>LNG trucking expansion</strong><p>HDV fleet still has large penetration runway; LNG cheaper than diesel when spot prices moderate.</p></div></div>
+      <div class="failover-item"><div class="failover-dot" style="background:var(--green)"></div><div class="failover-content"><strong>Urbanisation &amp; city-gas connections</strong><p>Continued new residential connections in tier-3/4 cities drives structural residential demand growth.</p></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--red);">Demand headwinds (bearish)</div>
+      <div class="failover-item"><div class="failover-dot" style="background:var(--red)"></div><div class="failover-content"><strong>Renewable cannibalization</strong><p>Wind + solar capacity growing 30%+ annually; structural displacement of gas in baseload power post-2030.</p></div></div>
+      <div class="failover-item"><div class="failover-dot" style="background:var(--red)"></div><div class="failover-content"><strong>GDP growth deceleration</strong><p>Real estate downturn + trade uncertainty suppress industrial demand; structural rather than cyclical.</p></div></div>
+      <div class="failover-item"><div class="failover-dot" style="background:var(--red)"></div><div class="failover-content"><strong>High spot LNG prices → demand destruction</strong><p>China increasingly opts for pipeline gas, storage draw, or coal when spot LNG exceeds $15/MMBtu.</p></div></div>
+      <div class="failover-item"><div class="failover-dot" style="background:var(--red)"></div><div class="failover-content"><strong>Power of Siberia-2 risk</strong><p>If fast-tracked, POS-2 (~50 Bcm/yr) could displace 30–40 MMt of LNG imports between 2029 and 2035.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 2026 MONTHLY (from Scenario Model) -->
+<div class="panel" id="panel-monthly26">
+  <div class="sce-btns">
+    <button class="sce-btn bull on" onclick="switchSce('26','bull',this)">Bull — GDP 4.8%</button>
+    <button class="sce-btn base"    onclick="switchSce('26','base',this)">Base — GDP 4.5%</button>
+    <button class="sce-btn bear"    onclick="switchSce('26','bear',this)">Bear — GDP 3.8%</button>
+  </div>
+  <div class="metrics" id="metrics-26" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));">
+    <div class="metric bull"><div class="m-label">FULL YEAR 2026</div><div class="m-val bull-c" id="m26-total">—</div><div class="m-sub" id="m26-chg">—</div></div>
+    <div class="metric"><div class="m-label">H2 2026 (Jul–Dec)</div><div class="m-val" id="m26-h2">—</div><div class="m-sub">second half</div></div>
+    <div class="metric"><div class="m-label">PEAK MONTH</div><div class="m-val" id="m26-pk">Dec</div><div class="m-sub" id="m26-pkv">—</div></div>
+    <div class="metric"><div class="m-label">TROUGH MONTH</div><div class="m-val" id="m26-tr">Feb</div><div class="m-sub" id="m26-trv">—</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">2026 — monthly total demand: scenario comparison vs 2025 actuals</div>
+    <div style="position:relative;height:260px;"><canvas id="chart26-line"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">2026 base case — sector stack by month (Bcm)</div>
+    <div style="position:relative;height:240px;"><canvas id="chart26-stack"></canvas></div>
+  </div>
+
+  <div class="section-lbl" id="lbl-26-sector">Monthly sector breakdown — 2026 bull case (Bcm)</div>
+  <div class="card"><div class="tbl-scroll"><table class="mtbl" id="tbl26"></table></div></div>
+
+  <div class="section-lbl">Scenario comparison — monthly totals (Bcm)</div>
+  <div class="card"><div class="tbl-scroll"><table class="ctbl" id="ctbl26"></table></div></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 2027 MONTHLY (from Scenario Model) -->
+<div class="panel" id="panel-monthly27">
+  <div class="sce-btns">
+    <button class="sce-btn bull on" onclick="switchSce('27','bull',this)">Bull — GDP 4.7%</button>
+    <button class="sce-btn base"    onclick="switchSce('27','base',this)">Base — GDP 4.0%</button>
+    <button class="sce-btn bear"    onclick="switchSce('27','bear',this)">Bear — GDP 3.5%</button>
+  </div>
+  <div class="metrics" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));">
+    <div class="metric bull"><div class="m-label">FULL YEAR 2027</div><div class="m-val bull-c" id="m27-total">—</div><div class="m-sub" id="m27-chg">—</div></div>
+    <div class="metric"><div class="m-label">H1 2027 (Jan–Jun)</div><div class="m-val" id="m27-h1">—</div><div class="m-sub">first half</div></div>
+    <div class="metric"><div class="m-label">YOY INCREMENT</div><div class="m-val" id="m27-inc">—</div><div class="m-sub" id="m27-drv">vs 2025 base</div></div>
+    <div class="metric"><div class="m-label">PEAK MONTH</div><div class="m-val" id="m27-pk">Dec</div><div class="m-sub" id="m27-pkv">—</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">2027 — monthly scenario comparison vs 2025 actuals</div>
+    <div style="position:relative;height:260px;"><canvas id="chart27-line"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">2027 base case — sector stack by month (Bcm)</div>
+    <div style="position:relative;height:240px;"><canvas id="chart27-stack"></canvas></div>
+  </div>
+
+  <div class="section-lbl" id="lbl-27-sector">Monthly sector breakdown — 2027 bull case (Bcm)</div>
+  <div class="card"><div class="tbl-scroll"><table class="mtbl" id="tbl27"></table></div></div>
+
+  <div class="section-lbl">Scenario comparison — monthly totals (Bcm)</div>
+  <div class="card"><div class="tbl-scroll"><table class="ctbl" id="ctbl27"></table></div></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ MONTHLY TRIGGERS (from Scenario Model) -->
+<div class="panel" id="panel-triggers">
+  <div class="insight">
+    Four monthly windows are disproportionately important for forecasting China's full-year LNG import volume. <strong>Re-export volumes</strong> out of Chinese terminals remain the most transparent real-time signal of domestic demand slack — when China is long gas it re-exports within days; when tight, re-exports collapse within weeks.
+  </div>
+
+  <div class="trigger-item" style="border-color:var(--bull-border);background:var(--bull-bg);">
+    <div class="trigger-mon">Jan–Feb</div>
+    <div class="trigger-content">
+      <strong>Winter close-out</strong>
+      <p><strong>Watch:</strong> Temperature deviation (HDD index); North terminal utilisation; UGS withdrawal rate.</p>
+      <p><strong>Bull signal:</strong> Cold snap → >3 Bcm/month excess withdrawal → spot LNG purchases activated → imports recover to 6+ mmt/month.</p>
+      <p><strong>Bear signal:</strong> Warm LNY → imports fall to 3–4 mmt/month → re-exports spike above 0.8 mmt/month → full-year base eroded in H1.</p>
+    </div>
+  </div>
+
+  <div class="trigger-item" style="border-color:var(--base-border);background:var(--base-bg);">
+    <div class="trigger-mon">Apr–May</div>
+    <div class="trigger-content">
+      <strong>Injection season pace</strong>
+      <p><strong>Watch:</strong> Manufacturing PMI (target >50); gas injection pace vs 5-year average; industrial YOY gas demand.</p>
+      <p><strong>Bull signal:</strong> PMI >50.5; injection on pace; industrial gas growing YOY → strong H2 baseline set.</p>
+      <p><strong>Bear signal:</strong> PMI &lt;49.5; slow injection rate; industrial contracting → market long → spot purchases suppressed through summer.</p>
+    </div>
+  </div>
+
+  <div class="trigger-item" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05);">
+    <div class="trigger-mon" style="color:var(--amber);">Jul–Sep</div>
+    <div class="trigger-content">
+      <strong>Summer power peak — hydro vs gas battle</strong>
+      <p><strong>Watch:</strong> Yangtze River water level index; Sichuan hydro output vs norm; Guangdong power pool LNG consumption.</p>
+      <p><strong>Bull signal:</strong> Hydro shortfall >10% → +6–8 Bcm gas-fired demand → Guangdong LNG tight → spot purchases spike. Largest single intra-year swing (1 GW hydro miss ≈ 7 spot cargoes in peak weeks).</p>
+      <p><strong>Bear signal:</strong> Wet summer → hydro excess → gas-fired power curtailed → South terminal utilisation drops below 45% → re-exports activated.</p>
+    </div>
+  </div>
+
+  <div class="trigger-item" style="border-color:var(--bear-border);background:var(--bear-bg);">
+    <div class="trigger-mon" style="color:var(--bear);">Oct–Nov</div>
+    <div class="trigger-content">
+      <strong>Pre-winter build — make or break for full-year</strong>
+      <p><strong>Watch:</strong> UGS storage fill rate vs target; industrial PMI trend; trucked LNG price spread vs diesel.</p>
+      <p><strong>Bull signal:</strong> Storage on track; industrial recovering; terminal bookings rising; winter premium building.</p>
+      <p><strong>Bear signal:</strong> Storage behind target; industrial still weak; trucked LNG oversupplied; term contract diversion requests rising. If China ends Oct with imports still running below 5 mmt/month, full-year LNG imports will likely fall below 60 mmt — a multi-year low.</p>
+    </div>
+  </div>
+
+  <div class="section-lbl">Analyst view</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Near-term 2026</div>
+      <p style="font-size:12.5px;color:var(--dim);line-height:1.65;">Market is well-supplied on contracted volumes but structurally weak on spot demand. Base case: ~63 mmt net imports — second consecutive annual decline, a first in China's history. A cold Q4 2026 combined with any Hormuz escalation is the most likely catalyst for a sharp LNG import recovery before year-end.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Medium-term 2027</div>
+      <p style="font-size:12.5px;color:var(--dim);line-height:1.65;">Contract ramp-up from Qatar, US, Australian projects reduces spot exposure. Power sector capacity additions provide a structural demand floor. Key risk: if industrial recovery remains elusive and property drag deepens, industrial gas stays 5–8% below 2024 peak. Without new contract signings by 2026–27, the supply gap widens materially from 2029–30.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// SHARED THEME
+// ═══════════════════════════════════════════════════════════════════
+const T = {
+  blue:'#3b82f6', teal:'#14b8a6', green:'#22c55e', amber:'#f59e0b',
+  coral:'#f97316', red:'#ef4444', purple:'#8b5cf6', gray:'#64748b',
+  lblue:'#60a5fa', lbull:'#4ade80', lbase:'#60a5fa', lbear:'#f87171',
+  bull:'#22c55e', base:'#3b82f6', bear:'#ef4444',
+  grid:'rgba(255,255,255,0.05)', text:'#94a3b8',
+  font:"'IBM Plex Sans', sans-serif", mono:"'IBM Plex Mono', monospace"
+};
+Chart.defaults.color = T.text;
+Chart.defaults.font.family = T.font;
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+Chart.defaults.plugins.legend.labels.padding = 14;
+
+// ═══════════════════════════════════════════════════════════════════
+// TAB SWITCHING (unified — handles both dashboard and scenario tabs)
+// ═══════════════════════════════════════════════════════════════════
+function show(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DASHBOARD 1 CHARTS
+// ═══════════════════════════════════════════════════════════════════
+const baseOpts = (extra={}) => ({
+  responsive: true, maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: { backgroundColor:'#1e293b', borderColor:'#334155', borderWidth:1,
+               titleColor:'#e2e8f0', bodyColor:'#94a3b8', padding:10 }
+  },
+  scales: {
+    x: { grid:{color:T.grid}, ticks:{color:T.text, font:{size:11}} },
+    y: { grid:{color:T.grid}, ticks:{color:T.text, font:{size:11}} }
+  },
+  ...extra
+});
+
+// Sector historical
+new Chart(document.getElementById('sectorHistChart'), {
+  type: 'bar',
+  data: {
+    labels: ['2020','2021','2022','2023','2024','2025'],
+    datasets: [
+      {label:'Industrial',     data:[145,157,157,159,179,174], backgroundColor:T.coral,  stack:'s'},
+      {label:'Power & heating',data:[55, 68, 75, 81, 87, 90],  backgroundColor:T.blue,   stack:'s'},
+      {label:'Residential',    data:[50, 55, 57, 59, 63, 65],  backgroundColor:T.purple, stack:'s'},
+      {label:'Commercial',     data:[39, 43, 43, 45, 50, 52],  backgroundColor:T.teal,   stack:'s'},
+      {label:'Transport',      data:[15, 20, 18, 22, 26, 30],  backgroundColor:T.amber,  stack:'s'},
+      {label:'Losses',         data:[18, 19, 19, 20, 21, 22],  backgroundColor:T.gray,   stack:'s'},
+    ]
+  },
+  options: { ...baseOpts(), plugins:{legend:{display:true,labels:{color:T.text,font:{size:10}}},
+    tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10}},
+    scales:{x:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+            y:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'Bcm',color:T.text}}}}
+});
+
+// Sector pie
+new Chart(document.getElementById('sectorPieChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Industrial 40%','Power & heating 21%','Residential 15%','Commercial 12%','Transport 7%','Losses 5%'],
+    datasets: [{data:[174,90,65,52,30,22],
+      backgroundColor:[T.coral,T.blue,T.purple,T.teal,T.amber,T.gray],
+      borderWidth:1.5, borderColor:'#161d2e'}]
+  },
+  options: { responsive:true, maintainAspectRatio:false, cutout:'62%',
+    plugins:{legend:{display:true,position:'right',labels:{color:T.text,font:{size:10},boxWidth:10,padding:10}},
+      tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10,
+               callbacks:{label:c=>`  ${c.label}: ${c.parsed} Bcm`}}}}
+});
+
+// Waterfall
+new Chart(document.getElementById('waterfallChart'), {
+  type: 'bar',
+  data: {
+    labels: ['2024 total','+ Power','+ Transport','+ Commercial','+ Residential','+ Industrial','+ Losses','= 2025 total'],
+    datasets: [{
+      data: [417, 3.1, 3.0, 2.1, 2.1, 1.9, 0.6, 429.7],
+      backgroundColor: ['#1e293b',T.blue,T.amber,T.teal,T.purple,'#f97316aa',T.gray,'#1d4ed8'],
+      borderRadius: 4
+    }]
+  },
+  options: { ...baseOpts(),
+    scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+            y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},min:400,title:{display:true,text:'Bcm',color:T.text}}},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,
+      titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10,callbacks:{label:c=>`  ${c.parsed.y} Bcm`}}}}
+});
+
+// Regional stacked horizontal
+new Chart(document.getElementById('regionalChart'), {
+  type: 'bar',
+  data: {
+    labels: ['East China\n(Jiangsu/Zhejiang/Shanghai)','South China\n(Guangdong/Guangxi/Hainan)','North China\n(Beijing/Hebei/Tianjin)','SW & Interior\n(Sichuan/Shaanxi/Xinjiang)'],
+    datasets: [
+      {label:'Industrial',              data:[80,33,27,34], backgroundColor:T.coral, stack:'r'},
+      {label:'Power & heating',         data:[40,43,22,26], backgroundColor:T.blue,  stack:'r'},
+      {label:'Residential & commercial',data:[40,19,41,25], backgroundColor:T.teal,  stack:'r'},
+    ]
+  },
+  options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:T.text,font:{size:10}}},
+      tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10,
+               callbacks:{label:c=>`  ${c.dataset.label}: ${c.parsed.x} Bcm`}}},
+    scales:{x:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:11}},title:{display:true,text:'Bcm',color:T.text}},
+            y:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}}}}
+});
+
+// Supply bar
+new Chart(document.getElementById('supplyBarChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Domestic production','LNG imports (Bcm eq.)','Pipeline imports'],
+    datasets: [
+      {label:'2024',data:[250,106,76],backgroundColor:[T.blue+'66',T.teal+'66',T.amber+'66'],borderRadius:3},
+      {label:'2025',data:[266,91,82], backgroundColor:[T.blue,T.teal,T.amber], borderRadius:3},
+    ]
+  },
+  options: { ...baseOpts(),
+    scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+            y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'Bcm',color:T.text}}},
+    plugins:{legend:{display:true,labels:{color:T.text,font:{size:10}}},
+      tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10}}}
+});
+
+// Pipeline pie
+new Chart(document.getElementById('pipelineChart'), {
+  type: 'doughnut',
+  data: {
+    labels:['Russia (POS-1) 47%','Turkmenistan 38%','Kazakhstan 5%','Myanmar 5%','Uzbekistan 4%'],
+    datasets:[{data:[38.6,31.6,4.5,4.2,3.0],
+      backgroundColor:[T.coral,T.amber,'#fbbf24',T.teal,T.gray],
+      borderWidth:1.5,borderColor:'#161d2e'}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+    plugins:{legend:{display:true,position:'right',labels:{color:T.text,font:{size:10},boxWidth:10,padding:8}},
+      tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10,
+               callbacks:{label:c=>`  ${c.label}: ${c.parsed} Bcm`}}}}
+});
+
+// LNG origin
+new Chart(document.getElementById('lngOriginChart'), {
+  type: 'doughnut',
+  data: {
+    labels:['Australia 31%','Qatar 30%','Russia LNG 10%','Malaysia 8%','Indonesia 4%','UAE/others 17%'],
+    datasets:[{data:[20.7,20.0,6.7,5.3,2.7,11.3],
+      backgroundColor:[T.blue,T.amber,T.coral,T.teal,T.purple,T.gray],
+      borderWidth:1.5,borderColor:'#161d2e'}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+    plugins:{legend:{display:true,position:'right',labels:{color:T.text,font:{size:10},boxWidth:10,padding:8}},
+      tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10,
+               callbacks:{label:c=>`  ${c.label}: ${c.parsed} mmt`}}}}
+});
+
+// Dom production
+new Chart(document.getElementById('domProdChart'), {
+  type: 'bar',
+  data: {
+    labels:['Onshore conv.\n+ tight gas','Offshore\nconventional','Shale gas\n(Sichuan)','Coalbed\nmethane','SNG','Other'],
+    datasets:[{data:[178,30,27,14,8,9],
+      backgroundColor:[T.blue,T.teal,T.green,T.amber,T.gray,T.purple],borderRadius:4}]
+  },
+  options:{...baseOpts(),
+    scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:9}}},
+            y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'Bcm',color:T.text}}},
+    plugins:{legend:{display:false},
+      tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10}}}
+});
+
+// Trucked LNG
+new Chart(document.getElementById('truckedChart'), {
+  type:'bar',
+  data:{
+    labels:['2020','2021','2022','2023','2024','2025'],
+    datasets:[
+      {label:'Land-based plants',data:[14.4,22.9,15.1,16.5,22.8,25.6],backgroundColor:T.teal,stack:'t'},
+      {label:'Ex-terminal',     data:[22.7,13.8,9.7,15.3,15.2,14.1],backgroundColor:T.blue,stack:'t'},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:T.text,font:{size:10}}},
+      tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10}},
+    scales:{x:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+            y:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'mmt',color:T.text}}}}
+});
+
+// Trucked region
+new Chart(document.getElementById('truckedRegionChart'), {
+  type:'bar',
+  data:{
+    labels:['Mid-west','Northwest','Southwest','North China','Mid/NE'],
+    datasets:[{data:[16.9,4.3,1.9,1.6,0.8],
+      backgroundColor:[T.teal,T.blue,T.amber,T.coral,T.gray],borderRadius:4}]
+  },
+  options:{...baseOpts(),
+    scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+            y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'mmt',color:T.text}}},
+    plugins:{legend:{display:false},
+      tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10}}}
+});
+
+// Outlook
+new Chart(document.getElementById('outlookChart'), {
+  type:'line',
+  data:{
+    labels:['2025','2026','2027','2028','2029','2030','2031'],
+    datasets:[
+      {label:'LNG demand forecast (mmt)',data:[67,63,75,90,105,120,135],
+        borderColor:T.coral,backgroundColor:'rgba(249,115,22,0.08)',fill:true,tension:0.35,pointRadius:5,borderWidth:2.5},
+      {label:'Contracted supply ramp',  data:[70,72,85,95,100,110,112],
+        borderColor:T.teal,borderDash:[5,4],backgroundColor:'transparent',tension:0.35,pointRadius:4,borderWidth:2},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:T.text,font:{size:11},boxWidth:10}},
+      tooltip:{backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10,
+               callbacks:{label:c=>`  ${c.dataset.label}: ${c.parsed.y} mmt`}}},
+    scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:11}}},
+            y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:11}},min:50,
+               title:{display:true,text:'mmt',color:T.text}}}}
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// SCENARIO MODEL DATA & LOGIC (2026/2027 Monthly + Triggers)
+// ═══════════════════════════════════════════════════════════════════
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const actuals25 = [30.0,19.0,27.0,27.5,28.5,30.0,32.5,36.0,32.0,34.0,35.5,41.0];
+
+// Seasonal profiles (normalised so each sums to 12)
+const SS = {
+  ind:[1.10,0.62,0.92,0.93,0.97,0.97,0.99,1.01,1.00,1.01,1.02,1.04],
+  pwr:[1.05,0.72,0.80,0.75,0.82,0.90,1.20,1.25,1.05,0.95,0.98,1.13],
+  res:[1.35,0.75,0.95,0.68,0.62,0.60,0.65,0.65,0.72,0.85,1.10,1.48],
+  com:[1.10,0.68,0.88,0.85,0.88,0.92,1.00,1.00,0.95,0.96,1.04,1.08],
+  trn:[0.95,0.72,0.90,0.92,0.96,0.97,1.02,1.04,1.02,1.04,1.10,1.06],
+  los:[1.05,0.85,0.92,0.90,0.92,0.94,0.98,1.00,0.98,1.00,1.04,1.08]
+};
+for (const k in SS) {
+  const s = SS[k].reduce((a,b) => a+b, 0);
+  SS[k] = SS[k].map(v => v / s * 12);
+}
+
+const ANN = {
+  '26': {
+    bull: {ind:181, pwr:98,  res:68, com:55,   trn:34.5, los:22.6},
+    base: {ind:176, pwr:95,  res:66, com:53.6,  trn:33,   los:22.4},
+    bear: {ind:167, pwr:92,  res:64, com:52,    trn:31.2, los:22.2}
+  },
+  '27': {
+    bull: {ind:190, pwr:108, res:71, com:57.8,  trn:39.4, los:23.3},
+    base: {ind:181, pwr:101, res:67, com:55.6,  trn:35.6, los:22.8},
+    bear: {ind:163, pwr:96,  res:65, com:53,    trn:33.4, los:22.4}
+  }
+};
+
+const SK = ['ind','pwr','res','com','trn','los'];
+const SN = ['Industrial','Power & heat.','Residential','Commercial','Transport','Losses'];
+const SC = [T.coral, T.blue, T.purple, T.teal, T.amber, T.gray];
+
+function buildMonthly(yr, sce) {
+  const d = ANN[yr][sce];
+  const tot = new Array(12).fill(0);
+  const rows = {};
+  for (const sk of SK) {
+    const m = SS[sk].map(f => +(d[sk] / 12 * f).toFixed(2));
+    rows[sk] = m;
+    m.forEach((v,i) => tot[i] += v);
+  }
+  return { rows, tot: tot.map(v => +v.toFixed(2)) };
+}
+
+// ── TABLE BUILDERS ────────────────────────────────────────────────
+function buildSectorTable(tableEl, yr, sce) {
+  const {rows, tot} = buildMonthly(yr, sce);
+  tableEl.innerHTML = '';
+  const thead = document.createElement('thead');
+  const htr = document.createElement('tr');
+  ['Sector', ...MONTHS, 'FY'].forEach(h => {
+    const th = document.createElement('th'); th.textContent = h; htr.appendChild(th);
+  });
+  thead.appendChild(htr); tableEl.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  SK.forEach((sk, si) => {
+    const tr = document.createElement('tr');
+    [SN[si], ...rows[sk].map(v => v.toFixed(1)), rows[sk].reduce((a,b) => a+b, 0).toFixed(0)].forEach((v, ci) => {
+      const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  // total row
+  const tr = document.createElement('tr');
+  ['TOTAL', ...tot.map(v => v.toFixed(1)), tot.reduce((a,b) => a+b, 0).toFixed(0)].forEach(v => {
+    const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+  });
+  tbody.appendChild(tr); tableEl.appendChild(tbody);
+}
+
+function buildCompTable(tableEl, yr) {
+  const gdpMap = {
+    '26': {bull:'4.8%', base:'4.5%', bear:'3.8%'},
+    '27': {bull:'4.7%', base:'4.0%', bear:'3.5%'}
+  };
+  const {tot:tb}  = buildMonthly(yr, 'bull');
+  const {tot:ts}  = buildMonthly(yr, 'base');
+  const {tot:tr2} = buildMonthly(yr, 'bear');
+  const spread = tb.map((v,i) => v - tr2[i]);
+  tableEl.innerHTML = '';
+  const thead = document.createElement('thead');
+  const htr = document.createElement('tr');
+  ['Case', ...MONTHS, 'FY'].forEach(h => { const th = document.createElement('th'); th.textContent = h; htr.appendChild(th); });
+  thead.appendChild(htr); tableEl.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  [
+    [`Bull (${gdpMap[yr].bull})`, tb,     'bull-row'],
+    [`Base (${gdpMap[yr].base})`, ts,     'base-row'],
+    [`Bear (${gdpMap[yr].bear})`, tr2,    'bear-row'],
+    ['Bull−Bear spread',          spread, 'spread-row']
+  ].forEach(([lbl, data, cls]) => {
+    const row = document.createElement('tr'); row.className = cls;
+    [lbl, ...data.map(v => v.toFixed(1)), data.reduce((a,b) => a+b, 0).toFixed(0)].forEach(v => {
+      const td = document.createElement('td'); td.textContent = v; row.appendChild(td);
+    });
+    tbody.appendChild(row);
+  });
+  tableEl.appendChild(tbody);
+}
+
+// Init tables
+buildSectorTable(document.getElementById('tbl26'), '26', 'bull');
+buildCompTable(document.getElementById('ctbl26'), '26');
+buildSectorTable(document.getElementById('tbl27'), '27', 'bull');
+buildCompTable(document.getElementById('ctbl27'), '27');
+
+// ── METRICS ───────────────────────────────────────────────────────
+const sceColorClass = {bull:'bull-c', base:'base-c', bear:'bear-c'};
+
+function updateMetrics(yr, sce) {
+  const {tot} = buildMonthly(yr, sce);
+  const sum  = +tot.reduce((a,b) => a+b, 0).toFixed(0);
+  const pct  = ((sum / 430 - 1) * 100).toFixed(1);
+  const h2   = +tot.slice(6).reduce((a,b) => a+b, 0).toFixed(1);
+  const h1   = +tot.slice(0,6).reduce((a,b) => a+b, 0).toFixed(1);
+  const peak = Math.max(...tot);
+  const tr   = Math.min(...tot);
+
+  if (yr === '26') {
+    const el = document.getElementById('m26-total');
+    el.textContent = sum + ' Bcm'; el.className = 'm-val ' + sceColorClass[sce];
+    document.getElementById('m26-chg').textContent = (pct > 0 ? '+' : '') + pct + '% vs 2025';
+    document.getElementById('m26-h2').textContent  = h2 + ' Bcm';
+    document.getElementById('m26-pk').textContent  = MONTHS[tot.indexOf(peak)];
+    document.getElementById('m26-pkv').textContent = peak.toFixed(1) + ' Bcm';
+    document.getElementById('m26-tr').textContent  = MONTHS[tot.indexOf(tr)];
+    document.getElementById('m26-trv').textContent = tr.toFixed(1) + ' Bcm';
+  } else {
+    const el = document.getElementById('m27-total');
+    el.textContent = sum + ' Bcm'; el.className = 'm-val ' + sceColorClass[sce];
+    document.getElementById('m27-chg').textContent = (pct > 0 ? '+' : '') + pct + '% vs 2025';
+    document.getElementById('m27-h1').textContent  = h1 + ' Bcm';
+    document.getElementById('m27-inc').textContent = (sum > 0 ? '+' : '') + (sum - 430) + ' Bcm';
+    document.getElementById('m27-pk').textContent  = MONTHS[tot.indexOf(peak)];
+    document.getElementById('m27-pkv').textContent = peak.toFixed(1) + ' Bcm';
+  }
+}
+updateMetrics('26', 'bull');
+updateMetrics('27', 'bull');
+
+// ── SCENARIO SWITCH ───────────────────────────────────────────────
+const sceLbls = {
+  '26': {bull:'Bull 2026 (GDP 4.8%)', base:'Base 2026 (GDP 4.5%)', bear:'Bear 2026 (GDP 3.8%)'},
+  '27': {bull:'Bull 2027 (GDP 4.7%)', base:'Base 2027 (GDP 4.0%)', bear:'Bear 2027 (GDP 3.5%)'}
+};
+
+function switchSce(yr, sce, btn) {
+  const panel = yr === '26'
+    ? document.getElementById('panel-monthly26')
+    : document.getElementById('panel-monthly27');
+  panel.querySelectorAll('.sce-btn').forEach(b => { b.className = b.className.replace(' on',''); });
+  btn.className += ' on';
+  buildSectorTable(document.getElementById('tbl' + yr), yr, sce);
+  document.getElementById('lbl-' + yr + '-sector').textContent =
+    `Monthly sector breakdown — ${sceLbls[yr][sce]} (Bcm)`;
+  updateMetrics(yr, sce);
+}
+
+// ── 2026 LINE CHART ───────────────────────────────────────────────
+const chart26line = new Chart(document.getElementById('chart26-line'), {
+  type: 'line',
+  data: {
+    labels: MONTHS,
+    datasets: [
+      {label:'2025 actual', data:actuals25, borderColor:'#475569', borderDash:[4,3], borderWidth:1.5, fill:false, tension:0.3, pointRadius:3, order:4},
+      {label:'Bull (4.8%)', data:buildMonthly('26','bull').tot, borderColor:T.bull, borderWidth:2.2, fill:false, tension:0.3, pointRadius:4, order:1},
+      {label:'Base (4.5%)', data:buildMonthly('26','base').tot, borderColor:T.base, borderWidth:2.2, fill:false, tension:0.3, pointRadius:4, order:2},
+      {label:'Bear (3.8%)', data:buildMonthly('26','bear').tot, borderColor:T.bear, borderWidth:2.2, fill:false, tension:0.3, pointRadius:4, order:3},
+    ]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins: {
+      legend:{display:true, labels:{color:T.text, font:{size:10}, boxWidth:10, padding:12}},
+      tooltip:{backgroundColor:'#1e293b', borderColor:'#334155', borderWidth:1, titleColor:'#e2e8f0', bodyColor:'#94a3b8', padding:10}
+    },
+    scales: {
+      x: {grid:{color:T.grid}, ticks:{color:T.text, font:{size:10.5}}},
+      y: {min:14, max:56, grid:{color:T.grid}, ticks:{color:T.text, font:{size:10.5}},
+          title:{display:true, text:'Bcm / month', color:T.text}}
+    }
+  }
+});
+
+// ── 2026 STACK CHART ──────────────────────────────────────────────
+const {rows:rows26base, tot:tot26base} = buildMonthly('26','base');
+const chart26stack = new Chart(document.getElementById('chart26-stack'), {
+  type: 'bar',
+  data: {
+    labels: MONTHS,
+    datasets: SK.map((sk,i) => ({label:SN[i], data:rows26base[sk], backgroundColor:SC[i], stack:'s', borderWidth:0}))
+      .concat([{label:'Total', data:tot26base, type:'line', borderColor:'#fff', borderWidth:1.5, fill:false, tension:0.3, pointRadius:3, order:-1}])
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins: {
+      legend:{display:true, labels:{color:T.text, font:{size:10}, boxWidth:10, padding:10}},
+      tooltip:{backgroundColor:'#1e293b', borderColor:'#334155', borderWidth:1, titleColor:'#e2e8f0', bodyColor:'#94a3b8', padding:10}
+    },
+    scales: {
+      x: {stacked:true, grid:{color:T.grid}, ticks:{color:T.text, font:{size:10.5}}},
+      y: {stacked:true, max:52, grid:{color:T.grid}, ticks:{color:T.text, font:{size:10.5}},
+          title:{display:true, text:'Bcm / month', color:T.text}}
+    }
+  }
+});
+
+// ── 2027 LINE CHART ───────────────────────────────────────────────
+const chart27line = new Chart(document.getElementById('chart27-line'), {
+  type: 'line',
+  data: {
+    labels: MONTHS,
+    datasets: [
+      {label:'2025 actual', data:actuals25, borderColor:'#475569', borderDash:[4,3], borderWidth:1.5, fill:false, tension:0.3, pointRadius:3, order:4},
+      {label:'Bull (4.7%)', data:buildMonthly('27','bull').tot, borderColor:T.bull, borderWidth:2.2, fill:false, tension:0.3, pointRadius:4, order:1},
+      {label:'Base (4.0%)', data:buildMonthly('27','base').tot, borderColor:T.base, borderWidth:2.2, fill:false, tension:0.3, pointRadius:4, order:2},
+      {label:'Bear (3.5%)', data:buildMonthly('27','bear').tot, borderColor:T.bear, borderWidth:2.2, fill:false, tension:0.3, pointRadius:4, order:3},
+    ]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins: {
+      legend:{display:true, labels:{color:T.text, font:{size:10}, boxWidth:10, padding:12}},
+      tooltip:{backgroundColor:'#1e293b', borderColor:'#334155', borderWidth:1, titleColor:'#e2e8f0', bodyColor:'#94a3b8', padding:10}
+    },
+    scales: {
+      x: {grid:{color:T.grid}, ticks:{color:T.text, font:{size:10.5}}},
+      y: {min:14, max:60, grid:{color:T.grid}, ticks:{color:T.text, font:{size:10.5}},
+          title:{display:true, text:'Bcm / month', color:T.text}}
+    }
+  }
+});
+
+// ── 2027 STACK CHART ──────────────────────────────────────────────
+const {rows:rows27base, tot:tot27base} = buildMonthly('27','base');
+const chart27stack = new Chart(document.getElementById('chart27-stack'), {
+  type: 'bar',
+  data: {
+    labels: MONTHS,
+    datasets: SK.map((sk,i) => ({label:SN[i], data:rows27base[sk], backgroundColor:SC[i], stack:'s', borderWidth:0}))
+      .concat([{label:'Total', data:tot27base, type:'line', borderColor:'#fff', borderWidth:1.5, fill:false, tension:0.3, pointRadius:3, order:-1}])
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins: {
+      legend:{display:true, labels:{color:T.text, font:{size:10}, boxWidth:10, padding:10}},
+      tooltip:{backgroundColor:'#1e293b', borderColor:'#334155', borderWidth:1, titleColor:'#e2e8f0', bodyColor:'#94a3b8', padding:10}
+    },
+    scales: {
+      x: {stacked:true, grid:{color:T.grid}, ticks:{color:T.text, font:{size:10.5}}},
+      y: {stacked:true, max:56, grid:{color:T.grid}, ticks:{color:T.text, font:{size:10.5}},
+          title:{display:true, text:'Bcm / month', color:T.text}}
+    }
+  }
+});
+</script>
+</body>
+</html>

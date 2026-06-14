@@ -1,0 +1,263 @@
+/* ══════════════════════════════════════════════════════════════════
+   India · Japan · Korea — Combined Gas Dashboard
+   Merges: ijk_gas_market_dashboard + ijk_gas_scenario_dashboard
+   ══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg:#080d16;--surface:#0e1520;--card:#131e2f;--border:#1a2d45;--border2:#1f3550;
+  --text:#dde5f0;--muted:#5a7291;--dim:#8aa3be;
+  --blue:#3b82f6;--teal:#14b8a6;--green:#22c55e;--amber:#f59e0b;
+  --coral:#f97316;--red:#ef4444;--purple:#8b5cf6;--lblue:#60a5fa;--accent:#38bdf8;
+  --india:#ff9933;--japan:#bc002d;--korea:#003087;
+  --india-lt:rgba(255,153,51,.12);--japan-lt:rgba(188,0,45,.12);--korea-lt:rgba(0,48,135,.12);
+  /* scenario colours */
+  --bull:#22c55e;--bull-bg:rgba(34,197,94,.08);--bull-border:rgba(34,197,94,.28);
+  --base:#3b82f6;--base-bg:rgba(59,130,246,.08);--base-border:rgba(59,130,246,.28);
+  --bear:#ef4444;--bear-bg:rgba(239,68,68,.08);--bear-border:rgba(239,68,68,.28);
+}
+
+*,*::before,*::after { box-sizing:border-box;margin:0;padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg);color:var(--text);
+  font-family:'IBM Plex Sans',sans-serif;font-size:13px;line-height:1.5;min-height:100vh;
+}
+
+/* ── HEADER ── */
+.header {
+  background:linear-gradient(135deg,#0a1628 0%,#080d16 70%);
+  border-bottom:1px solid var(--border);
+  padding:16px 28px 12px;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+}
+.header h1 {
+  font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;
+  color:#fff;letter-spacing:-.3px;line-height:1.25;
+}
+.header h1 .flag { margin-right:3px; }
+.header p { color:var(--muted);font-size:10px;margin-top:3px;font-family:'IBM Plex Mono',monospace; }
+.badge {
+  background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.22);
+  color:var(--accent);font-size:9.5px;font-family:'IBM Plex Mono',monospace;
+  padding:4px 10px;border-radius:4px;white-space:nowrap;
+}
+
+/* ── COUNTRY SELECTOR ── */
+.country-bar { display:flex;gap:0;background:var(--surface);border-bottom:1px solid var(--border); }
+.country-btn {
+  flex:1;padding:12px 10px;font-size:12px;font-family:'IBM Plex Mono',monospace;font-weight:600;
+  cursor:pointer;border:none;background:transparent;color:var(--muted);
+  border-bottom:3px solid transparent;transition:all .15s;text-align:center;letter-spacing:.03em;
+}
+.country-btn:hover { color:var(--dim); }
+.country-btn.india.active  { color:var(--india); border-bottom-color:var(--india); background:var(--india-lt); }
+.country-btn.japan.active  { color:var(--japan); border-bottom-color:var(--japan); background:var(--japan-lt); }
+.country-btn.korea.active  { color:var(--korea); border-bottom-color:var(--korea); background:var(--korea-lt); }
+.country-btn.all.active    { color:var(--accent); border-bottom-color:var(--accent); background:rgba(56,189,248,.07); }
+.country-flag { font-size:18px;margin-right:6px; }
+
+/* ── TABS ── */
+.tabs {
+  display:flex;gap:2px;padding:10px 28px 0;
+  background:#0b1220;border-bottom:1px solid var(--border);overflow-x:auto;
+}
+.tab {
+  padding:8px 15px;font-size:11.5px;font-family:'IBM Plex Mono',monospace;font-weight:500;
+  color:var(--muted);cursor:pointer;border:none;background:transparent;
+  border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;
+}
+.tab:hover { color:var(--dim); }
+.tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+
+/* Visual separator between tab groups */
+.tab-sep {
+  width:1px;background:var(--border2);margin:8px 5px 0;flex-shrink:0;
+}
+
+/* ── PANELS ── */
+.country-page { display:none; }
+.country-page.active { display:block; }
+.panel { display:none;padding:20px 28px 28px;animation:fadeIn .18s ease; }
+.panel.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:none} }
+
+/* ── METRICS ── */
+.metrics { display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin-bottom:16px; }
+.metric {
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:11px 13px;position:relative;overflow:hidden;
+}
+.metric::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent); }
+/* country accents */
+.metric.india::before { background:var(--india); }
+.metric.japan::before { background:var(--japan); }
+.metric.korea::before { background:var(--korea); }
+/* scenario accents */
+.metric.bull::before  { background:var(--bull); }
+.metric.base::before  { background:var(--base); }
+.metric.bear::before  { background:var(--bear); }
+
+.metric .m-label { font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.05em;margin-bottom:4px;text-transform:uppercase; }
+.metric .m-val   { font-size:18px;font-weight:600;color:#fff;font-family:'IBM Plex Mono',monospace;line-height:1; }
+.metric .m-val.bull-c { color:var(--bull); }
+.metric .m-val.base-c { color:var(--base); }
+.metric .m-val.bear-c { color:var(--bear); }
+.metric .m-sub   { font-size:9px;color:var(--muted);margin-top:3px; }
+
+/* ── GRIDS ── */
+.grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px; }
+.grid-3 { display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px; }
+@media(max-width:800px) { .grid-2,.grid-3 { grid-template-columns:1fr; } }
+
+/* ── CARD ── */
+.card { background:var(--card);border:1px solid var(--border);border-radius:10px;padding:15px; }
+.card-title {
+  font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--dim);
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:11px;
+  display:flex;align-items:center;gap:7px;
+}
+.card-title::before { content:'';width:3px;height:10px;border-radius:2px;background:var(--accent);display:inline-block;flex-shrink:0; }
+
+/* ── DATA ROWS ── */
+.data-row { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px; }
+.data-row:last-child { border-bottom:none; }
+.data-row .dot      { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+.data-row .name     { flex:1;color:var(--dim); }
+.data-row .bar-wrap { flex:1;height:4px;background:var(--border2);border-radius:2px;overflow:hidden; }
+.data-row .bar-fill { height:100%;border-radius:2px; }
+.data-row .vol      { font-family:'IBM Plex Mono',monospace;font-weight:500;min-width:60px;text-align:right;font-size:11px; }
+.data-row .pct      { font-size:9px;color:var(--muted);min-width:30px;text-align:right; }
+
+/* ── INSIGHT ── */
+.insight {
+  border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+  padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--dim);line-height:1.65;
+}
+.insight.india { background:rgba(255,153,51,.06);border-left-color:var(--india); }
+.insight.japan { background:rgba(188,0,45,.06);border-left-color:var(--japan); }
+.insight.korea { background:rgba(0,48,135,.06);border-left-color:var(--korea); }
+
+/* ── SECTION LABEL ── */
+.section-lbl {
+  font-size:9.5px;font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--muted);
+  letter-spacing:.1em;text-transform:uppercase;margin:14px 0 8px;
+}
+
+/* ── SUPPLY TABLE ── */
+.sup-table { width:100%;border-collapse:collapse;font-size:11.5px; }
+.sup-table th {
+  background:var(--border);color:var(--dim);font-family:'IBM Plex Mono',monospace;
+  font-size:9.5px;letter-spacing:.05em;text-align:left;padding:6px 9px;
+}
+.sup-table td { padding:6px 9px;border-bottom:1px solid var(--border);color:var(--text); }
+.sup-table td:first-child { color:var(--dim); }
+.sup-table tr:last-child td { border-bottom:none; }
+
+/* ── TAGS ── */
+.tag { display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-weight:600; }
+.tag-h    { background:rgba(34,197,94,.12);color:#4ade80; }
+.tag-m    { background:rgba(245,158,11,.12);color:#fbbf24; }
+.tag-l    { background:rgba(239,68,68,.12);color:#f87171; }
+.tag-buy  { background:rgba(34,197,94,.15);color:#4ade80; }
+.tag-watch { background:rgba(245,158,11,.15);color:#fbbf24; }
+.tag-avoid { background:rgba(239,68,68,.15);color:#f87171; }
+
+/* ── FAILOVER ITEMS ── */
+.fi { display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border); }
+.fi:last-child { border-bottom:none; }
+.fi-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px; }
+.fi-content strong { display:block;font-size:12px;color:var(--text);margin-bottom:2px; }
+.fi-content p { font-size:11px;color:var(--muted);line-height:1.5; }
+
+/* ── COMPARISON TABLE ── */
+.cmp-wrap { overflow-x:auto; }
+.cmp-table { width:100%;border-collapse:collapse;font-size:12px; }
+.cmp-table th {
+  background:var(--border);color:var(--dim);font-family:'IBM Plex Mono',monospace;
+  font-size:9.5px;letter-spacing:.04em;text-align:left;padding:7px 10px;
+}
+.cmp-table td { padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top; }
+.cmp-table tr:nth-child(even) td { background:rgba(255,255,255,.02); }
+.cmp-table tr:last-child td { border-bottom:none; }
+.flag-cell { display:flex;align-items:center;gap:8px; }
+
+/* ── ALERT BAR ── */
+.alert-bar {
+  background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
+  border-radius:8px;padding:9px 13px;font-size:11px;color:#fbbf24;
+  margin-bottom:14px;display:flex;gap:8px;align-items:flex-start;line-height:1.55;
+}
+.alert-bar::before { content:"⚠";flex-shrink:0;font-size:13px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   SCENARIO MODEL STYLES  (from ijk_gas_scenario_dashboard)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* scenario toggle buttons */
+.sce-row { display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center; }
+.sce-btn {
+  padding:6px 18px;font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:500;
+  border-radius:20px;cursor:pointer;border:1px solid var(--border2);
+  background:transparent;color:var(--muted);transition:all .15s;
+}
+.sce-btn.bull.on { background:var(--bull-bg);border-color:var(--bull-border);color:var(--bull); }
+.sce-btn.base.on { background:var(--base-bg);border-color:var(--base-border);color:var(--base); }
+.sce-btn.bear.on { background:var(--bear-bg);border-color:var(--bear-border);color:var(--bear); }
+
+/* monthly table */
+.tbl-scroll { overflow-x:auto; }
+table.mtbl {
+  width:100%;border-collapse:collapse;font-size:11px;
+  font-family:'IBM Plex Mono',monospace;white-space:nowrap;
+}
+.mtbl th { background:var(--border);color:var(--dim);padding:5px 7px;text-align:right;font-size:9.5px;letter-spacing:.04em; }
+.mtbl th:first-child { text-align:left; }
+.mtbl td { padding:4px 7px;text-align:right;border-bottom:1px solid var(--border);color:var(--text); }
+.mtbl td:first-child { text-align:left;color:var(--dim);font-weight:500; }
+.mtbl tr:last-child td { background:rgba(59,130,246,.08);color:var(--lblue);font-weight:600;border-bottom:none; }
+.mtbl tr:nth-child(even) td { background:rgba(255,255,255,.02); }
+
+/* comparison table */
+table.ctbl {
+  width:100%;border-collapse:collapse;font-size:11px;
+  font-family:'IBM Plex Mono',monospace;white-space:nowrap;
+}
+.ctbl th { background:var(--border);color:var(--dim);padding:5px 7px;text-align:right;font-size:9.5px;letter-spacing:.04em; }
+.ctbl th:first-child { text-align:left; }
+.ctbl td { padding:4px 7px;text-align:right;border-bottom:1px solid var(--border); }
+.ctbl .bull-row   td { background:var(--bull-bg);color:#4ade80; }
+.ctbl .base-row   td { background:var(--base-bg);color:var(--lblue); }
+.ctbl .bear-row   td { background:var(--bear-bg);color:#fca5a5; }
+.ctbl .spread-row td { background:rgba(255,255,255,.02);color:var(--muted); }
+.ctbl td:first-child { text-align:left;font-weight:600; }
+
+/* trigger items */
+.trigger-item {
+  display:flex;gap:10px;padding:11px;border-radius:8px;
+  margin-bottom:7px;border:1px solid var(--border);
+}
+.trigger-mon { font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11.5px;min-width:65px;color:var(--accent); }
+.trigger-content p      { font-size:11px;color:var(--dim);line-height:1.55;margin-top:2px; }
+.trigger-content strong { font-size:12px;color:var(--text); }
+
+/* assumption cards */
+.assum-grid {
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:14px;
+}
+@media(max-width:800px) { .assum-grid { grid-template-columns:1fr; } }
+.assum-card { border:1px solid var(--border);border-radius:10px;padding:14px; }
+.assum-card.bull { border-color:var(--bull-border);background:var(--bull-bg); }
+.assum-card.base { border-color:var(--base-border);background:var(--base-bg); }
+.assum-card.bear { border-color:var(--bear-border);background:var(--bear-bg); }
+.assum-card h3 { font-size:11.5px;font-family:'IBM Plex Mono',monospace;font-weight:600;margin-bottom:9px; }
+.assum-card.bull h3 { color:var(--bull); }
+.assum-card.base h3 { color:var(--base); }
+.assum-card.bear h3 { color:var(--bear); }
+.assum-item { font-size:11px;color:var(--dim);padding:3.5px 0;border-bottom:1px solid var(--border);line-height:1.5; }
+.assum-item:last-child { border-bottom:none; }
+.assum-item strong { color:var(--text); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:5px;height:5px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border2);border-radius:3px; }

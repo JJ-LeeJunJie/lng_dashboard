@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India · Japan · Korea — Gas Market Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1><span class="flag">🇮🇳</span>India · <span class="flag">🇯🇵</span>Japan · <span class="flag">🇰🇷</span>Korea — <span style="color:var(--accent)">Gas Market &amp; Scenario Dashboard</span></h1>
+    <p>Baseline 2025 + Scenario Model 2026–2027 | Sources: S&P Global · IEA · EIA · Wood Mackenzie · IEEJ (2025–2026)</p>
+  </div>
+  <div class="badge">COMBINED DASHBOARD</div>
+</div>
+
+<div class="country-bar">
+  <button class="country-btn india active" onclick="switchCountry('india',this)"><span class="country-flag">🇮🇳</span>India</button>
+  <button class="country-btn japan" onclick="switchCountry('japan',this)"><span class="country-flag">🇯🇵</span>Japan</button>
+  <button class="country-btn korea" onclick="switchCountry('korea',this)"><span class="country-flag">🇰🇷</span>Korea</button>
+  <button class="country-btn" onclick="switchCountry('compare',this)" style="color:var(--muted)"><span class="country-flag">⚖️</span>Compare</button>
+</div>
+
+<div class="tabs">
+  <!-- Dashboard 1 tabs -->
+  <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
+  <button class="tab" onclick="switchTab('demand',this)">Demand by sector</button>
+  <button class="tab" onclick="switchTab('supply',this)">Supply sources</button>
+  <button class="tab" onclick="switchTab('lng',this)">LNG profile</button>
+  <button class="tab" onclick="switchTab('outlook',this)">Outlook &amp; risks</button>
+  <!-- Separator -->
+  <div class="tab-sep"></div>
+  <!-- Scenario model tabs (Dashboard 2) -->
+  <button class="tab" onclick="switchTab('monthly26',this)">2026 monthly</button>
+  <button class="tab" onclick="switchTab('monthly27',this)">2027 monthly</button>
+  <button class="tab" onclick="switchTab('triggers',this)">Monthly triggers</button>
+</div>
+
+<!-- ============================================================ INDIA -->
+<div class="country-page active" id="cp-india">
+
+  <!-- INDIA — Overview -->
+  <div class="panel active" id="india-overview">
+    <div class="alert-bar">2025: LNG imports −11% YOY through 8M (17 MMt). Full-year ~25.6 mmt (−6% vs 2024 record). Fertiliser −10%, Power −31%, CGD +14%, Industrial +14% YOY in 7M 2025. 50.1 MMtpa regasification capacity (not 42). Domestic production peaking ~2027–28.</div>
+    <div class="metrics">
+      <div class="metric india"><div class="m-label">Gas Demand (5M 2025)</div><div class="m-val">6.8</div><div class="m-sub">Bcf/d avg · −4% YOY; ~70 Bcm ann.</div></div>
+      <div class="metric india"><div class="m-label">LNG Imports 2025E</div><div class="m-val">~25.6</div><div class="m-sub">mmt · −6% vs 2024 record of 27.3 mmt</div></div>
+      <div class="metric india"><div class="m-label">Domestic Production</div><div class="m-val">3.4</div><div class="m-sub">Bcf/d (5M 2025) · −3% YOY; peak ~2027–28</div></div>
+      <div class="metric"><div class="m-label">Regasification Cap.</div><div class="m-val">50.1</div><div class="m-sub">MMtpa (incl. Chhara, May 2025) · ~55% util.</div></div>
+      <div class="metric"><div class="m-label">LNG Supply Share</div><div class="m-val">~50%</div><div class="m-sub">of total gas demand (7M 2025)</div></div>
+      <div class="metric"><div class="m-label">GDP Growth 2025</div><div class="m-val">6.4%</div><div class="m-sub">IMF estimate; fastest major econ.</div></div>
+    </div>
+    <div class="insight india">India is the world&#39;s fourth-largest LNG importer. LNG imports declined ~6% in 2025 to ~25.6 mmt after a record 27.3 mmt in 2024 — driven by elevated spot LNG prices through 2025 (avg ~$10.5/MMBtu in 5M 2025). Domestic production peaked mid-decade, declining from 2027–28 onward. <strong style="color:var(--text)">CGD (city gas distribution) has become the primary long-run demand growth driver — not fertiliser.</strong> Price sensitivity is extreme: JKM above $13–15/MMBtu triggers rapid demand destruction (2022 and 2025 precedent). LNG imports record: 27.3 mmt in 2024 (+21%) enabled by competitive spot prices vs naphtha/fuel oil.</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Supply stack (~200 Bcm eq.)</div>
+        <div class="data-row"><div class="dot" style="background:var(--teal)"></div><div class="name">LNG imports (~91 Bcm eq.)</div><div class="bar-wrap"><div class="bar-fill" style="width:51%;background:var(--india)"></div></div><div class="vol">~102 Bcm</div><div class="pct">51%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--blue)"></div><div class="name">Domestic production</div><div class="bar-wrap"><div class="bar-fill" style="width:32%;background:var(--blue)"></div></div><div class="vol">~35 Bcm</div><div class="pct">17%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--amber)"></div><div class="name">APM / domestic gas (KG-D6, etc.)</div><div class="bar-wrap"><div class="bar-fill" style="width:32%;background:var(--amber)"></div></div><div class="vol">~63 Bcm</div><div class="pct">32%</div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;">No pipeline imports. All incremental demand satisfied by LNG. Regasification is the binding constraint — 6 of 7 terminals below 50% utilisation.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Demand sectors</div>
+        <div class="data-row"><div class="dot" style="background:var(--amber)"></div><div class="name">Fertiliser &amp; petrochemicals</div><div class="bar-wrap"><div class="bar-fill" style="width:38%;background:var(--amber)"></div></div><div class="vol">~76 Bcm</div><div class="pct">38%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--blue)"></div><div class="name">Power generation</div><div class="bar-wrap"><div class="bar-fill" style="width:17%;background:var(--blue)"></div></div><div class="vol">~34 Bcm</div><div class="pct">17%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--coral)"></div><div class="name">Industrial (steel, refinery, mfg)</div><div class="bar-wrap"><div class="bar-fill" style="width:22%;background:var(--coral)"></div></div><div class="vol">~44 Bcm</div><div class="pct">22%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--teal)"></div><div class="name">City gas / CGD (CNG + residential)</div><div class="bar-wrap"><div class="bar-fill" style="width:20%;background:var(--teal)"></div></div><div class="vol">~40 Bcm</div><div class="pct">20%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--muted)"></div><div class="name">Other / losses</div><div class="bar-wrap"><div class="bar-fill" style="width:3%;background:var(--muted)"></div></div><div class="vol">~6 Bcm</div><div class="pct">3%</div></div>
+      </div>
+    </div>
+    <div class="section-lbl">LNG supply failover logic</div>
+    <div class="card">
+      <div class="fi"><div class="fi-dot" style="background:var(--amber)"></div><div class="fi-content"><strong>If spot LNG &gt;$14/MMBtu</strong><p>Fertiliser plants revert to government APM gas (heavily rationed); power sector switches to coal; industrial users curtail. India's elasticity is the highest of any Northeast Asian buyer.</p></div></div>
+      <div class="fi"><div class="fi-dot" style="background:var(--red)"></div><div class="fi-content"><strong>Domestic production decline</strong><p>KG-D6 deepwater (ONGC) and Mumbai High mature fields declining ~4–6%/yr post-2025. No near-term replacement. This is the structural LNG demand driver through 2030.</p></div></div>
+      <div class="fi"><div class="fi-dot" style="background:var(--teal)"></div><div class="fi-content"><strong>Pipeline connectivity expansion</strong><p>10,800 km of new pipeline authorised — will unlock CGD demand in East/South India (currently un-served). 2025–27 commissioning of Urja Ganga and Indradhanush grids.</p></div></div>
+    </div>
+  </div>
+
+  <!-- INDIA — Demand -->
+  <div class="panel" id="india-demand">
+    <div class="insight india">India's gas demand grew at 11.5% CAGR (2022–24) driven by fertiliser subsidies and industrial expansion. Growth will moderate to ~6–8%/yr through 2027 as subsidy policy normalises. The CGD sector (city gas) is the most structural long-run driver — growing from 25% to 32% of gas mix by 2030 as pipeline network expands into un-served cities.</div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Gas demand by sector 2020–2025 (Bcm)</div><div style="position:relative;height:240px;"><canvas id="india-sect-hist"></canvas></div></div>
+      <div class="card"><div class="card-title">2025 sector share</div><div style="position:relative;height:240px;"><canvas id="india-sect-pie"></canvas></div></div>
+    </div>
+    <div class="section-lbl">Sector narratives</div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title" style="color:var(--amber);">Fertiliser — 38% of demand</div>
+        <p style="font-size:11.5px;color:var(--dim);line-height:1.6;">Largest single sector. Government subsidises farmers, bearing ~$30Bn/yr in fertiliser subsidies (FY2023). This makes fertiliser plants near price-insensitive to LNG spot prices. India's entire LNG demand growth since FY2016 is attributable almost entirely to this sector. RLNG for urea plants is the key demand lever.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--blue);">Power — 17% of demand (declining)</div>
+        <p style="font-size:11.5px;color:var(--dim);line-height:1.6;">8 GW of gas-fired capacity retired in April 2025 after generating zero electricity for years — a historic stranded asset event. Gas-fired power cannot compete with coal (~$6/MMBtu) or renewables. 31 plants across 8GW operated at below 10% load factor Nov 2024–Mar 2025. Power sector LNG is a story of decline.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--teal);">CGD / city gas — 20% &amp; growing</div>
+        <p style="font-size:11.5px;color:var(--dim);line-height:1.6;">CNG vehicles (transport) + residential / commercial gas connections. Growing as new pipeline coverage unlocks cities. CGD sector consumes ~40 MMscmd/day. EV penetration is beginning to challenge CNG — EV sales grew 123% faster than CNG vehicles over the past 8 years. CGD remains growth story to 2030.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- INDIA — Supply -->
+  <div class="panel" id="india-supply">
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Supply source matrix (2025)</div>
+      <div class="cmp-wrap">
+      <table class="sup-table">
+        <thead><tr><th>Source</th><th>Volume</th><th>Reliability</th><th>Cost vs LNG</th><th>Status / notes</th></tr></thead>
+        <tbody>
+          <tr><td>KG-D6 (ONGC/RIL offshore)</td><td>~14 Bcm</td><td><span class="tag tag-m">MEDIUM</span></td><td>LOW (~$3–6/MMBtu APM)</td><td>Declining; MJ field extends life but not enough to arrest structural decline post-2025</td></tr>
+          <tr><td>Mumbai High + other mature</td><td>~10 Bcm</td><td><span class="tag tag-l">LOW</span></td><td>LOW (APM pool)</td><td>Rapid natural decline; no material new discoveries in near term</td></tr>
+          <tr><td>CBG / biogas</td><td>&lt;1 Bcm</td><td><span class="tag tag-l">LOW</span></td><td>MEDIUM</td><td>Nascent; &lt;90 plants operational; target 5 Bcm by 2030 is aspirational</td></tr>
+          <tr><td>LNG long-term contracts</td><td>~22 mmt (~30 Bcm)</td><td><span class="tag tag-h">HIGH</span></td><td>MEDIUM (~$8–11)</td><td>GAIL, Petronet, IOC; Qatar (Rasgas), US (Sabine Pass, Cheniere), UAE (ADNOC)</td></tr>
+          <tr><td>LNG spot / short-term</td><td>~6 mmt (~8 Bcm)</td><td><span class="tag tag-l">LOW</span></td><td>HIGH (JKM linked)</td><td>Doubled in 2024; price-sensitive; sharply cut when JKM spikes above $13/MMBtu</td></tr>
+          <tr><td>Pipeline imports</td><td>ZERO</td><td>N/A</td><td>N/A</td><td>No cross-border pipeline; geography precludes Central Asia routes (desert/mountains)</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">LNG imports by source country 2024 (mmt)</div><div style="position:relative;height:220px;"><canvas id="india-lng-src"></canvas></div></div>
+      <div class="card">
+        <div class="card-title">Alternative supply trade-off</div>
+        <table class="sup-table">
+          <thead><tr><th>Alternative</th><th>Speed</th><th>Cost</th><th>Reliability</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td>Domestic production upside</td><td>2/5</td><td>5/5</td><td>2/5</td><td><span class="tag tag-avoid">AVOID</span> — structural decline locked in</td></tr>
+            <tr><td>Pipeline gas (Central Asia)</td><td>1/5</td><td>3/5</td><td>2/5</td><td><span class="tag tag-avoid">AVOID</span> — no viable route exists</td></tr>
+            <tr><td>Coal / oil back-stop (power)</td><td>5/5</td><td>5/5</td><td>4/5</td><td><span class="tag tag-buy">BUY</span> — coal already dominant, easy switch</td></tr>
+            <tr><td>Renewables displacement (power)</td><td>1/5</td><td>4/5</td><td>3/5</td><td><span class="tag tag-watch">WATCH</span> — long-term bear for gas power</td></tr>
+            <tr><td>LNG source diversification</td><td>4/5</td><td>3/5</td><td>4/5</td><td><span class="tag tag-buy">BUY</span> — US + Australian SPA ramp from 2026–27</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- INDIA — LNG Profile -->
+  <div class="panel" id="india-lng">
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Annual LNG imports 2018–2025 (mmt)</div><div style="position:relative;height:230px;"><canvas id="india-lng-hist"></canvas></div></div>
+      <div class="card"><div class="card-title">Monthly LNG imports seasonality (typical, kt)</div><div style="position:relative;height:230px;"><canvas id="india-seas"></canvas></div></div>
+    </div>
+    <div class="section-lbl">Regasification terminal summary</div>
+    <div class="card">
+      <table class="sup-table">
+        <thead><tr><th>Terminal</th><th>Capacity (MMtpa)</th><th>Operator</th><th>Utilisation</th><th>Location</th></tr></thead>
+        <tbody>
+          <tr><td>Dahej</td><td>22.5</td><td>Petronet LNG</td><td>~100%</td><td>Gujarat (West)</td></tr>
+          <tr><td>Hazira</td><td>5.0</td><td>Shell / TOTAL</td><td>~40%</td><td>Gujarat (West)</td></tr>
+          <tr><td>Dabhol (Ratnagiri)</td><td>5.0</td><td>GAIL / NTPC</td><td>&lt;30%</td><td>Maharashtra (West)</td></tr>
+          <tr><td>Kochi</td><td>5.0</td><td>Petronet LNG</td><td>&lt;30%</td><td>Kerala (South)</td></tr>
+          <tr><td>Ennore</td><td>5.0</td><td>Indian Oil Corp</td><td>&lt;25%</td><td>Tamil Nadu (East)</td></tr>
+          <tr><td>Mundra (GSPC)</td><td>5.0</td><td>GSPC</td><td>&lt;40%</td><td>Gujarat (West)</td></tr>
+          <tr><td>Jaigarh (H-Energy)</td><td>4.0</td><td>H-Energy</td><td>&lt;20%</td><td>Maharashtra (West)</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;">Total capacity ~51.5 MMtpa. Overall system utilisation ~55% in FY2025. Dahej is the critical node — any disruption triggers tightness immediately. LNG re-gasification, not demand, is the binding infrastructure constraint for India's gas growth.</div>
+    </div>
+  </div>
+
+  <!-- INDIA — Outlook -->
+  <div class="panel" id="india-outlook">
+    <div class="grid-2">
+      <div class="card"><div class="card-title">LNG demand forecast 2025–2030 (mmt)</div><div style="position:relative;height:220px;"><canvas id="india-fcast"></canvas></div></div>
+      <div class="card">
+        <div class="card-title">Market summary card</div>
+        <div style="background:rgba(255,153,51,.05);border:1px solid rgba(255,153,51,.2);border-radius:8px;padding:14px;font-size:12px;color:var(--dim);line-height:1.7;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="color:var(--india);font-family:'IBM Plex Mono',monospace;font-weight:600;">INDIA</span><span style="color:var(--amber);font-family:'IBM Plex Mono',monospace;">BULLISH 2026–27</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;font-size:11px;">
+            <span>LNG dependency:</span><span style="color:#fff;font-family:'IBM Plex Mono',monospace;">~51%</span>
+            <span>Supply adequacy:</span><span style="color:#fbbf24;font-family:'IBM Plex Mono',monospace;">DEFICIT</span>
+            <span>Supply security:</span><span style="color:#fbbf24;font-family:'IBM Plex Mono',monospace;">MEDIUM</span>
+            <span>LNG 2026 forecast:</span><span style="color:#fff;font-family:'IBM Plex Mono',monospace;">30–33 mmt</span>
+            <span>LNG 2027 forecast:</span><span style="color:#fff;font-family:'IBM Plex Mono',monospace;">33–37 mmt</span>
+          </div>
+          <p style="font-size:11px;line-height:1.6;"><strong style="color:var(--text);">View:</strong> India is a structural LNG importer with demand set to grow 6–8%/yr through 2027. Domestic production decline is the key structural pull. The fertiliser sector is the most reliable incremental demand driver. Gas-fired power is the key demand-destruction risk when JKM is elevated. Contract ramp-up from US/Australian SPAs signed in 2024 reduces spot exposure from 2026 onward.</p>
+          <div style="margin-top:10px;font-size:11px;"><strong style="color:var(--text);">Top risks:</strong><br>1. JKM spike &gt;$15 → demand destruction (HIGH probability with Hormuz tensions)<br>2. Domestic production declining faster than forecast (MED)<br>3. Renewable acceleration displaces gas-fired power structurally (MED-term)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INDIA — 2026 Monthly (from Scenario Dashboard) -->
+  <div class="panel" id="india-monthly26">
+    <div class="sce-row">
+      <button class="sce-btn bull on" onclick="sceSw('india','26','bull',this)">Bull (GDP 6.8%)</button>
+      <button class="sce-btn base" onclick="sceSw('india','26','base',this)">Base (GDP 6.4%)</button>
+      <button class="sce-btn bear" onclick="sceSw('india','26','bear',this)">Bear (GDP 5.8%)</button>
+    </div>
+    <div class="metrics">
+      <div class="metric bull"><div class="m-label">Full year 2026</div><div class="m-val bull-c" id="i26-tot">—</div><div class="m-sub" id="i26-chg">—</div></div>
+      <div class="metric"><div class="m-label">H2 2026</div><div class="m-val" id="i26-h2">—</div><div class="m-sub">Jul–Dec</div></div>
+      <div class="metric"><div class="m-label">Peak month</div><div class="m-val" id="i26-pk">Jan</div><div class="m-sub" id="i26-pkv">—</div></div>
+      <div class="metric"><div class="m-label">Trough month</div><div class="m-val" id="i26-tr">Jun</div><div class="m-sub" id="i26-trv">—</div></div>
+    </div>
+    <div class="card" style="margin-bottom:13px;"><div class="card-title">2026 LNG demand — scenario comparison vs 2025 (mmt/month)</div><div style="position:relative;height:240px;"><canvas id="india-26-line"></canvas></div></div>
+    <div class="card" style="margin-bottom:13px;"><div class="card-title">2026 base case — sector stack (monthly, Bcm eq.)</div><div style="position:relative;height:220px;"><canvas id="india-26-stack"></canvas></div></div>
+    <div class="section-lbl" id="india-26-tbl-lbl">Monthly LNG demand by sector — India 2026 bull case (mmt eq.)</div>
+    <div class="card"><div class="tbl-scroll"><table class="mtbl" id="india-tbl26"></table></div></div>
+    <div class="section-lbl">Scenario comparison — monthly LNG totals (mmt)</div>
+    <div class="card"><div class="tbl-scroll"><table class="ctbl" id="india-ctbl26"></table></div></div>
+  </div>
+
+  <!-- INDIA — 2027 Monthly (from Scenario Dashboard) -->
+  <div class="panel" id="india-monthly27">
+    <div class="sce-row">
+      <button class="sce-btn bull on" onclick="sceSw('india','27','bull',this)">Bull (GDP 6.5%)</button>
+      <button class="sce-btn base" onclick="sceSw('india','27','base',this)">Base (GDP 6.2%)</button>
+      <button class="sce-btn bear" onclick="sceSw('india','27','bear',this)">Bear (GDP 5.5%)</button>
+    </div>
+    <div class="metrics">
+      <div class="metric bull"><div class="m-label">Full year 2027</div><div class="m-val bull-c" id="i27-tot">—</div><div class="m-sub" id="i27-chg">—</div></div>
+      <div class="metric"><div class="m-label">H1 2027</div><div class="m-val" id="i27-h1">—</div><div class="m-sub">Jan–Jun</div></div>
+      <div class="metric"><div class="m-label">YOY increment</div><div class="m-val" id="i27-inc">—</div><div class="m-sub" id="i27-drv">vs 2025</div></div>
+      <div class="metric"><div class="m-label">Peak month</div><div class="m-val" id="i27-pk">Jan</div><div class="m-sub" id="i27-pkv">—</div></div>
+    </div>
+    <div class="card" style="margin-bottom:13px;"><div class="card-title">2027 LNG demand — scenario comparison vs 2025 (mmt/month)</div><div style="position:relative;height:240px;"><canvas id="india-27-line"></canvas></div></div>
+    <div class="section-lbl" id="india-27-tbl-lbl">Monthly LNG demand — India 2027 bull case (mmt eq.)</div>
+    <div class="card"><div class="tbl-scroll"><table class="mtbl" id="india-tbl27"></table></div></div>
+    <div class="section-lbl">Scenario comparison — monthly LNG totals (mmt)</div>
+    <div class="card"><div class="tbl-scroll"><table class="ctbl" id="india-ctbl27"></table></div></div>
+  </div>
+
+  <!-- INDIA — Monthly Triggers (from Scenario Dashboard) -->
+  <div class="panel" id="india-triggers">
+    <div class="insight india">India's LNG demand has four key monthly trigger windows. The JKM price level is the overarching signal — it determines whether India buys spot or diverts demand to coal and APM gas.</div>
+    <div class="trigger-item" style="border-color:var(--bull-border);background:var(--bull-bg);">
+      <div class="trigger-mon">Apr–Jun</div>
+      <div class="trigger-content">
+        <strong>Pre-monsoon power demand + summer industrial ramp</strong>
+        <p><strong>Watch:</strong> JKM spot price; CEA power shortage data; RLNG uptake at gas plants.<br><strong>Bull:</strong> JKM &lt;$11 → RLNG power plants operating above 20% load factor; industrial gas demand picking up.<br><strong>Bear:</strong> JKM &gt;$14 → gas plants idle; coal restores full dispatch; spot cargo purchases cancelled.</p>
+      </div>
+    </div>
+    <div class="trigger-item" style="border-color:var(--base-border);background:var(--base-bg);">
+      <div class="trigger-mon">Jul–Sep</div>
+      <div class="trigger-content">
+        <strong>Kharif fertiliser season + monsoon industrial slowdown</strong>
+        <p><strong>Watch:</strong> Govt fertiliser allocation announcements; urea import tender volumes (inverse indicator for RLNG).<br><strong>Bull:</strong> Strong kharif season → fertiliser plants at max capacity; RLNG demand elevated despite monsoon.<br><strong>Bear:</strong> Weak monsoon + low farmer income → govt reduces urea subsidy allocation → fertiliser LNG cut.</p>
+      </div>
+    </div>
+    <div class="trigger-item" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05);">
+      <div class="trigger-mon" style="color:var(--amber);">Oct–Nov</div>
+      <div class="trigger-content">
+        <strong>Rabi season + winter pre-positioning</strong>
+        <p><strong>Watch:</strong> Petronet Dahej booking rate; spot cargo tenders by GAIL/IOC; CGD offtake in northern cities.<br><strong>Bull:</strong> Cold north Indian winter arriving early → residential CGD + industrial heat demand spikes; buyers pre-position.<br><strong>Bear:</strong> Global LNG market tightens (Europe winter demand) → JKM spikes; India pulls back from spot market.</p>
+      </div>
+    </div>
+    <div class="trigger-item" style="border-color:var(--bear-border);background:var(--bear-bg);">
+      <div class="trigger-mon" style="color:#fca5a5;">Dec–Feb</div>
+      <div class="trigger-content">
+        <strong>Winter peak + Dahej utilisation signal</strong>
+        <p><strong>Watch:</strong> Dahej regasification utilisation (real-time capacity signal); LNG cargo spot price India landed cost.<br><strong>Bull:</strong> Dahej at &gt;90% → market tight; other terminals absorbing incremental cargoes; new pipeline commissioning unlocking eastern demand.<br><strong>Bear:</strong> JKM &gt;$16 → India cancels spot tenders, diverts contracted cargoes to Europe for premium; domestic shortfall managed by curtailment.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end cp-india -->
+
+<!-- ============================================================ JAPAN -->
+<div class="country-page" id="cp-japan">
+
+  <!-- JAPAN — Overview -->
+  <div class="panel active" id="japan-overview">
+    <div class="alert-bar">CRITICAL UPDATE: K-K Unit 7 delayed to 2029 (anti-terrorism facility extended from Sept 2026 to Aug 2029). Unit 6: governor approved Nov 27, 2025 — S&P now assumes April 1, 2026 restart. 14 reactors online as of Nov 2025 (NOT 15). 2025 LNG: 65.6 mmt est. (11M = 59.3 MMt +1%). Japan signed 10.2 MMtpa new contracts in 2025 — highest since 2012. Coal generation +4.3% in 1H 2025 vs gas −3.1% (coal $4–5/MMBtu vs LNG).</div>
+    <div class="metrics">
+      <div class="metric japan"><div class="m-label">Gas Demand 2024</div><div class="m-val">92</div><div class="m-sub">Bcm (flat YOY) · VERIFIED</div></div>
+      <div class="metric japan"><div class="m-label">LNG Imports 2025E</div><div class="m-val">65.6</div><div class="m-sub">mmt (S&P est.) · 11M: 59.3 MMt (+1%)</div></div>
+      <div class="metric japan"><div class="m-label">Nuclear (Nov 2025)</div><div class="m-val">14</div><div class="m-sub">reactors · 13.2 GW · K-K6 approved Nov 27</div></div>
+      <div class="metric"><div class="m-label">LNG Dependency</div><div class="m-val">~97%</div><div class="m-sub">of total supply; no pipeline</div></div>
+      <div class="metric"><div class="m-label">Regasification Cap.</div><div class="m-val">208.4</div><div class="m-sub">MMtpa · 32% utilisation · massive overcapacity</div></div>
+      <div class="metric"><div class="m-label">New Contracts 2025</div><div class="m-val">10.2</div><div class="m-sub">MMtpa signed · highest since 2012</div></div>
+    </div>
+    <div class="insight japan">Japan is the world's second-largest LNG importer and the defining force behind global LNG market structure — but it is now a market in secular decline. Nuclear restarts (14→15 reactors in Feb 2026) and renewable growth are systematically displacing gas-fired power. Japan imported 9 Bcf/d in 2025 vs 11 Bcf/d in 2018. The country is structurally over-contracted — Japanese companies now re-sell ~40% of handled LNG volumes offshore, creating a unique role as both importer and trader.</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Supply stack (~95 Bcm)</div>
+        <div class="data-row"><div class="dot" style="background:var(--japan)"></div><div class="name">LNG imports</div><div class="bar-wrap"><div class="bar-fill" style="width:97%;background:var(--japan)"></div></div><div class="vol">~95 Bcm</div><div class="pct">97%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--muted)"></div><div class="name">Domestic production</div><div class="bar-wrap"><div class="bar-fill" style="width:3%;background:var(--muted)"></div></div><div class="vol">~3 Bcm</div><div class="pct">3%</div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;">Entirely LNG-dependent. No cross-border pipeline connectivity. Domestic production is minimal (small onshore fields in Niigata). Storage buffers seasonal demand (~3.5 Mt working capacity).</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Demand sectors</div>
+        <div class="data-row"><div class="dot" style="background:var(--japan)"></div><div class="name">Power generation</div><div class="bar-wrap"><div class="bar-fill" style="width:57%;background:var(--japan)"></div></div><div class="vol">~54 Bcm</div><div class="pct">57%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--blue)"></div><div class="name">City gas (residential + commercial)</div><div class="bar-wrap"><div class="bar-fill" style="width:21%;background:var(--blue)"></div></div><div class="vol">~20 Bcm</div><div class="pct">21%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--teal)"></div><div class="name">Industrial (chemicals, steel)</div><div class="bar-wrap"><div class="bar-fill" style="width:16%;background:var(--teal)"></div></div><div class="vol">~15 Bcm</div><div class="pct">16%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--muted)"></div><div class="name">Other / LNG bunkering</div><div class="bar-wrap"><div class="bar-fill" style="width:6%;background:var(--muted)"></div></div><div class="vol">~6 Bcm</div><div class="pct">6%</div></div>
+      </div>
+    </div>
+    <div class="section-lbl">Nuclear restart → LNG displacement</div>
+    <div class="card">
+      <div class="fi"><div class="fi-dot" style="background:var(--japan)"></div><div class="fi-content"><strong>Kashiwazaki-Kariwa Unit 6 restart (Feb 2026)</strong><p>1,356 MW displaces ~1.3 mmt/yr of LNG (62 Bcf/yr). Unit 7 (1,356 MW) delayed to 2029–30. Each 1 GW of nuclear restart at 80% capacity factor ≈ ~0.9 mmt/yr of LNG demand displaced.</p></div></div>
+      <div class="fi"><div class="fi-dot" style="background:var(--red)"></div><div class="fi-content"><strong>Structural over-contracting risk</strong><p>IEEFA estimates Japanese utilities may be over-contracted by up to 12 mmt/yr as domestic demand falls. Companies are resorting to overseas resales (now 40% of handled volumes) to manage the imbalance.</p></div></div>
+      <div class="fi"><div class="fi-dot" style="background:var(--amber)"></div><div class="fi-content"><strong>Seasonal swing buffer</strong><p>Japan's LNG storage (~3.5 Mt) can cover ~3 weeks of peak winter demand. One very cold day in Tokyo consumes ~65,000 tonnes — a full cargo. Winter supply disruptions move JKM within days.</p></div></div>
+    </div>
+  </div>
+
+  <!-- JAPAN — Demand -->
+  <div class="panel" id="japan-demand">
+    <div class="insight japan">Japan's LNG imports declined for the 9th consecutive year in FY2025, reaching ~62 mmt vs 75 mmt in FY2019. Gas-fired power (33% of electricity in 2024) is the sole swing sector — power demand is structurally displaced by nuclear and renewables. City gas and industrial demand are relatively stable. Japan's gas demand will not recover; the debate is about the rate of decline.</div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">LNG imports trend 2019–2025 (mmt)</div><div style="position:relative;height:240px;"><canvas id="japan-lng-trend"></canvas></div></div>
+      <div class="card"><div class="card-title">Power generation mix 2024 (TWh)</div><div style="position:relative;height:240px;"><canvas id="japan-power"></canvas></div></div>
+    </div>
+    <div class="section-lbl">Demand by sector — sub-components</div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title" style="color:var(--japan);">Power — 57% of gas demand</div>
+        <p style="font-size:11.5px;color:var(--dim);line-height:1.6;">Gas accounted for 33% of Japan's total electricity in 2024, down from 42% peak in 2014. Nuclear restarts structurally displace gas — each reactor adds ~0.9 mmt/yr of LNG displacement. 15 reactors online (33 GW) as of Feb 2026. Target: 20% nuclear by 2040, requiring ~30 reactors. Base case: 20–22 reactors by 2030.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--blue);">City gas — 21% (stable)</div>
+        <p style="font-size:11.5px;color:var(--dim);line-height:1.6;">Residential heating, cooking, commercial. Relatively price-inelastic. Mildly declining as efficient appliances and electrification replace gas in households. Tokyo Gas and Osaka Gas are dominant distributors. Market liberalisation (2017 Gas Business Act) introduced competition but volumes remain stable.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--teal);">Industrial — 16% (stable/slight decline)</div>
+        <p style="font-size:11.5px;color:var(--dim);line-height:1.6;">Chemicals, steel, glass, food. Relatively stable demand base. Some industrial coal-to-gas switching has occurred but is limited by LNG import prices. Japan's industrial sector is mature; there is no significant new capacity coming online that would boost gas demand.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAPAN — Supply -->
+  <div class="panel" id="japan-supply">
+    <div class="grid-2">
+      <div class="card"><div class="card-title">LNG import sources 2025 (% share)</div><div style="position:relative;height:220px;"><canvas id="japan-lng-src"></canvas></div></div>
+      <div class="card">
+        <div class="card-title">Supply source matrix</div>
+        <table class="sup-table">
+          <thead><tr><th>Source</th><th>Volume</th><th>Reliability</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Australia (Gorgon, Ichthys, QCLNG)</td><td>~24 mmt (39%)</td><td><span class="tag tag-h">HIGH</span></td><td>Largest supplier; equity stakes by JERA, Osaka Gas, Tokyo Gas; destination-flexible renegotiated</td></tr>
+            <tr><td>Malaysia (MLNG)</td><td>~10 mmt (16%)</td><td><span class="tag tag-h">HIGH</span></td><td>Legacy long-term contracts; Mitsubishi/Mitsui equity; production plateau</td></tr>
+            <tr><td>Russia (Sakhalin-2)</td><td>~9 mmt (14%)</td><td><span class="tag tag-m">MEDIUM</span></td><td>Geopolitical risk elevated; Shell stake replaced by Gazprom subsidiary; Japan continues buying</td></tr>
+            <tr><td>USA (Sabine Pass, Corpus Christi)</td><td>~5 mmt (7%)</td><td><span class="tag tag-m">MEDIUM</span></td><td>Declined in 2025 (tariff/political tension); destination-flexible FOB; JERA, Sumitomo</td></tr>
+            <tr><td>Qatar (RasGas/QatarEnergy)</td><td>~5 mmt (8%)</td><td><span class="tag tag-h">HIGH</span></td><td>Long-term contracts; Hormuz transit risk</td></tr>
+            <tr><td>Others (PNG, Brunei, UAE, Oman)</td><td>~9 mmt (15%)</td><td><span class="tag tag-m">MEDIUM</span></td><td>Portfolio of older legacy contracts; some approaching expiry</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAPAN — LNG Profile -->
+  <div class="panel" id="japan-lng">
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Monthly LNG imports seasonality (Bcm)</div><div style="position:relative;height:230px;"><canvas id="japan-seas"></canvas></div></div>
+      <div class="card">
+        <div class="card-title">Japan as LNG trader — the re-sell story</div>
+        <div style="position:relative;height:230px;"><canvas id="japan-resell"></canvas></div>
+      </div>
+    </div>
+    <div class="section-lbl">Key infrastructure</div>
+    <div class="card">
+      <p style="font-size:11.5px;color:var(--dim);line-height:1.7;">Japan operates <strong style="color:var(--text);">over 30 LNG import terminals</strong> with ~250 MMtpa total nameplate capacity — far exceeding actual imports of ~62 mmt. Major hubs: Futtsu (JERA), Sodegaura (Tokyo Gas), Himeji (Kansai Electric), Senboku (Osaka Gas). Liquefaction capacity for domestic storage re-injection exceeds 80 Mt. Japan's storage (~3.5 Mt) is LNG in regasification state — cryogenic tanks at coastal terminals, not underground caverns. The world's most sophisticated and redundant LNG infrastructure network.</p>
+    </div>
+  </div>
+
+  <!-- JAPAN — Outlook -->
+  <div class="panel" id="japan-outlook">
+    <div class="grid-2">
+      <div class="card"><div class="card-title">LNG import forecast 2025–2030 (mmt)</div><div style="position:relative;height:220px;"><canvas id="japan-fcast"></canvas></div></div>
+      <div class="card">
+        <div class="card-title">Market summary card</div>
+        <div style="background:rgba(188,0,45,.05);border:1px solid rgba(188,0,45,.2);border-radius:8px;padding:14px;font-size:12px;color:var(--dim);line-height:1.7;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="color:var(--japan);font-family:'IBM Plex Mono',monospace;font-weight:600;">JAPAN</span><span style="color:#f87171;font-family:'IBM Plex Mono',monospace;">BEARISH / NEUTRAL</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;font-size:11px;">
+            <span>LNG dependency:</span><span style="color:#fff;font-family:'IBM Plex Mono',monospace;">~97%</span>
+            <span>Supply adequacy:</span><span style="color:#4ade80;font-family:'IBM Plex Mono',monospace;">SURPLUS</span>
+            <span>Supply security:</span><span style="color:#4ade80;font-family:'IBM Plex Mono',monospace;">HIGH</span>
+            <span>LNG 2026 forecast:</span><span style="color:#fff;font-family:'IBM Plex Mono',monospace;">60–62 mmt</span>
+            <span>LNG 2027 forecast:</span><span style="color:#fff;font-family:'IBM Plex Mono',monospace;">58–61 mmt</span>
+          </div>
+          <p style="font-size:11px;line-height:1.6;"><strong style="color:var(--text);">View:</strong> Japan is bearish for LNG demand. Nuclear restarts are the structural headwind — each restart displaces ~0.9 mmt/yr. The over-contracting problem means Japan is increasingly a swing re-seller, not a swing buyer. JKM upside from Japanese demand surprises will come from nuclear outages or cold winter, not structural growth.</p>
+          <div style="margin-top:10px;font-size:11px;"><strong style="color:var(--text);">Top risks:</strong><br>1. Nuclear restart faster than expected → deeper LNG demand decline (MED)<br>2. Cold winter + nuclear outage → demand spike (HIGH probability seasonally)<br>3. Sakhalin-2 geopolitical disruption (~9 mmt at risk) (MED)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAPAN — 2026 Monthly (from Scenario Dashboard) -->
+  <div class="panel" id="japan-monthly26">
+    <div class="sce-row">
+      <button class="sce-btn bull on" onclick="sceSw('japan','26','bull',this)">Bull (nuclear delays)</button>
+      <button class="sce-btn base" onclick="sceSw('japan','26','base',this)">Base (gradual restart)</button>
+      <button class="sce-btn bear" onclick="sceSw('japan','26','bear',this)">Bear (fast + warm)</button>
+    </div>
+    <div class="metrics">
+      <div class="metric bull"><div class="m-label">Full year 2026</div><div class="m-val bull-c" id="j26-tot">—</div><div class="m-sub" id="j26-chg">—</div></div>
+      <div class="metric"><div class="m-label">H2 2026</div><div class="m-val" id="j26-h2">—</div><div class="m-sub">Jul–Dec</div></div>
+      <div class="metric"><div class="m-label">Peak month</div><div class="m-val" id="j26-pk">Jan</div><div class="m-sub" id="j26-pkv">—</div></div>
+      <div class="metric"><div class="m-label">Trough month</div><div class="m-val" id="j26-tr">Jun</div><div class="m-sub" id="j26-trv">—</div></div>
+    </div>
+    <div class="card" style="margin-bottom:13px;"><div class="card-title">2026 LNG imports — scenario comparison (mmt/month)</div><div style="position:relative;height:240px;"><canvas id="japan-26-line"></canvas></div></div>
+    <div class="section-lbl" id="japan-26-tbl-lbl">Monthly LNG by sector — Japan 2026 bull case (mmt)</div>
+    <div class="card"><div class="tbl-scroll"><table class="mtbl" id="japan-tbl26"></table></div></div>
+    <div class="section-lbl">Scenario comparison — monthly totals (mmt)</div>
+    <div class="card"><div class="tbl-scroll"><table class="ctbl" id="japan-ctbl26"></table></div></div>
+  </div>
+
+  <!-- JAPAN — 2027 Monthly (from Scenario Dashboard) -->
+  <div class="panel" id="japan-monthly27">
+    <div class="sce-row">
+      <button class="sce-btn bull on" onclick="sceSw('japan','27','bull',this)">Bull (nuclear delays)</button>
+      <button class="sce-btn base" onclick="sceSw('japan','27','base',this)">Base (gradual restart)</button>
+      <button class="sce-btn bear" onclick="sceSw('japan','27','bear',this)">Bear (fast + warm)</button>
+    </div>
+    <div class="metrics">
+      <div class="metric bull"><div class="m-label">Full year 2027</div><div class="m-val bull-c" id="j27-tot">—</div><div class="m-sub" id="j27-chg">—</div></div>
+      <div class="metric"><div class="m-label">H1 2027</div><div class="m-val" id="j27-h1">—</div><div class="m-sub">Jan–Jun</div></div>
+      <div class="metric"><div class="m-label">YOY change</div><div class="m-val" id="j27-inc">—</div><div class="m-sub">vs 2025 base</div></div>
+      <div class="metric"><div class="m-label">Peak month</div><div class="m-val" id="j27-pk">Jan</div><div class="m-sub" id="j27-pkv">—</div></div>
+    </div>
+    <div class="card" style="margin-bottom:13px;"><div class="card-title">2027 LNG imports — scenario comparison (mmt/month)</div><div style="position:relative;height:240px;"><canvas id="japan-27-line"></canvas></div></div>
+    <div class="section-lbl" id="japan-27-tbl-lbl">Monthly LNG by sector — Japan 2027 bull case (mmt)</div>
+    <div class="card"><div class="tbl-scroll"><table class="mtbl" id="japan-tbl27"></table></div></div>
+    <div class="section-lbl">Scenario comparison — monthly totals (mmt)</div>
+    <div class="card"><div class="tbl-scroll"><table class="ctbl" id="japan-ctbl27"></table></div></div>
+  </div>
+
+  <!-- JAPAN — Monthly Triggers (from Scenario Dashboard) -->
+  <div class="panel" id="japan-triggers">
+    <div class="insight japan">Japan's LNG demand is driven by three swing variables: winter temperatures, nuclear availability, and summer cooling demand. Unlike India, Japan is price-inelastic for term supply — price matters mainly for resale decisions, not domestic consumption levels.</div>
+    <div class="trigger-item" style="border-color:var(--bull-border);background:var(--bull-bg);">
+      <div class="trigger-mon">Dec–Feb</div>
+      <div class="trigger-content">
+        <strong>Winter peak — the make-or-break period</strong>
+        <p><strong>Watch:</strong> Tokyo temperature anomaly vs 30-yr average; JERA/Tokyo Gas inventory levels; nuclear outage announcements.<br><strong>Bull:</strong> Cold snap + nuclear outage → emergency cargo purchases; JKM spot spike &gt;$15; Japan becomes net buyer rather than re-seller. Historically: 1°C colder than average = +65,000 t LNG demand in Tokyo region alone.<br><strong>Bear:</strong> Warm winter + all planned reactors running → re-sales surge; re-sale volumes push Asia spot prices down.</p>
+      </div>
+    </div>
+    <div class="trigger-item" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05);">
+      <div class="trigger-mon" style="color:var(--amber);">Jul–Sep</div>
+      <div class="trigger-content">
+        <strong>Summer cooling + nuclear maintenance season</strong>
+        <p><strong>Watch:</strong> Electricity generation data; nuclear capacity factor; solar output (Japan's solar ~90GW; high generation in clear summers depresses gas).<br><strong>Bull:</strong> Hot summer + planned nuclear maintenance → gas-fired dispatch rises; 2025 pattern (summer surpassed winter gas demand) could repeat.<br><strong>Bear:</strong> Mild summer + full nuclear + strong solar → gas power dispatch near historic lows; re-sales maximised.</p>
+      </div>
+    </div>
+    <div class="trigger-item" style="border-color:var(--base-border);background:var(--base-bg);">
+      <div class="trigger-mon">Year-round</div>
+      <div class="trigger-content">
+        <strong>Nuclear restart announcements (continuous monitoring)</strong>
+        <p><strong>Watch:</strong> Nuclear Regulation Authority (NRA) approval decisions; TEPCO Kashiwazaki-Kariwa Unit 7 timeline (delayed to 2029–30).<br><strong>Each new restart approved:</strong> ~0.9 mmt/yr LNG displacement locked in. Monitor NRA monthly meeting minutes. Current pipeline: 3 reactors with NRA initial approval, 6 under review. If all 9 cleared by 2027 → additional 7–8 mmt/yr LNG displacement vs base.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end cp-japan -->
+
+<!-- ============================================================ KOREA -->
+<div class="country-page" id="cp-korea">
+
+  <!-- KOREA — Overview -->
+  <div class="panel active" id="korea-overview">
+    <div class="alert-bar">KEY 2025 CHANGES: Oman SPA expired Dec 2024 (4.06 MMtpa) → Oman imports −60% YOY to 1.5 mmt in 11M 2025 (biggest supply-side shift). KOGAS deficit 14 trillion KRW now recovering. 17 coal plants shut Dec 25–Mar 26 (up from 15). Hanbit No.1 (950 MW) offline Dec 2025. Storage 87% end-Nov — well supplied. JKM forecast ~$10.73/MMBtu winter 25/26, ~$9.04/MMBtu in 2026.</div>
+    <div class="metrics">
+      <div class="metric korea"><div class="m-label">Gas Demand 2024</div><div class="m-val">59</div><div class="m-sub">Bcm · +0.2% YOY · VERIFIED</div></div>
+      <div class="metric korea"><div class="m-label">LNG Imports 2024</div><div class="m-val">46.5</div><div class="m-sub">mmt · +3.7% YOY · VERIFIED</div></div>
+      <div class="metric korea"><div class="m-label">11M 2025 Imports</div><div class="m-val">43.0</div><div class="m-sub">mmt · +2% YOY; Apr/May/Aug records</div></div>
+      <div class="metric"><div class="m-label">LNG Dependency</div><div class="m-val">100%</div><div class="m-sub">no domestic prod., no pipeline</div></div>
+      <div class="metric"><div class="m-label">Storage (Nov 2025)</div><div class="m-val">87%</div><div class="m-sub">comfortable; 15 MMcm / 92 tanks / 53 days</div></div>
+      <div class="metric"><div class="m-label">Gas in power mix</div><div class="m-val">29%</div><div class="m-sub">2024; rising to ~33% by 2029</div></div>
+    </div>
+    <div class="insight korea">Korea is the world's third-largest LNG importer and entirely dependent on LNG — no domestic production, no pipeline imports. Unlike Japan (bearish), Korea's LNG demand is BULLISH through 2029: aging nuclear + coal plants retiring, grid congestion restricting east coast coal, and nuclear delays all drive higher gas-fired generation. KOGAS holds 74% market share but private importers are growing rapidly (now 26% of imports).</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Supply stack (~62 Bcm)</div>
+        <div class="data-row"><div class="dot" style="background:var(--korea)"></div><div class="name">LNG imports (100% of supply)</div><div class="bar-wrap"><div class="bar-fill" style="width:100%;background:var(--korea)"></div></div><div class="vol">~62 Bcm</div><div class="pct">100%</div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;">Entirely LNG-dependent. No pipeline or domestic production. KOGAS monopoly on city gas; private terminals growing for power + industrial. LNG storage ~3.9 Mt across 13 terminals. Storage inventory hits 87% in Nov 2025 — well-supplied entering winter.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Demand sectors (59 Bcm 2024)</div>
+        <div class="data-row"><div class="dot" style="background:var(--korea)"></div><div class="name">Power generation</div><div class="bar-wrap"><div class="bar-fill" style="width:51%;background:var(--korea)"></div></div><div class="vol">~30 Bcm</div><div class="pct">51%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--blue)"></div><div class="name">Industrial (direct use)</div><div class="bar-wrap"><div class="bar-fill" style="width:18%;background:var(--blue)"></div></div><div class="vol">~11 Bcm</div><div class="pct">18%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--teal)"></div><div class="name">Residential (city gas, heating)</div><div class="bar-wrap"><div class="bar-fill" style="width:18%;background:var(--teal)"></div></div><div class="vol">~11 Bcm</div><div class="pct">18%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--amber)"></div><div class="name">Commercial &amp; public</div><div class="bar-wrap"><div class="bar-fill" style="width:9%;background:var(--amber)"></div></div><div class="vol">~5 Bcm</div><div class="pct">9%</div></div>
+        <div class="data-row"><div class="dot" style="background:var(--muted)"></div><div class="name">Transport / other</div><div class="bar-wrap"><div class="bar-fill" style="width:4%;background:var(--muted)"></div></div><div class="vol">~2 Bcm</div><div class="pct">4%</div></div>
+      </div>
+    </div>
+    <div class="section-lbl">Why Korea is bullish (unlike Japan)</div>
+    <div class="card">
+      <div class="fi"><div class="fi-dot" style="background:var(--korea)"></div><div class="fi-content"><strong>Nuclear retirements outpacing restarts (2025–2029)</strong><p>Hanbit No.1 went offline Dec 2025. Multiple aging units scheduled for decommissioning. New builds (Saeul 3&4) delayed. Net nuclear capacity is DECLINING in the near term, creating a gas power gap.</p></div></div>
+      <div class="fi"><div class="fi-dot" style="background:var(--red)"></div><div class="fi-content"><strong>East coast grid congestion restricting coal</strong><p>East coast transmission line to metropolitan area delayed beyond original 2027 to now expected 2029. Coal plants restricted year-round. This is a persistent bullish driver for gas through 2029.</p></div></div>
+      <div class="fi"><div class="fi-dot" style="background:var(--amber)"></div><div class="fi-content"><strong>Fine dust management — seasonal coal shutdowns</strong><p>Government 7th Seasonal Fine Dust Plan shuts 17 coal plants Dec–Mar (up from 15 in prior season). This creates a structural winter gas demand uplift every year until coal retirement is complete.</p></div></div>
+    </div>
+  </div>
+
+  <!-- KOREA — Demand -->
+  <div class="panel" id="korea-demand">
+    <div class="insight korea">Korean gas demand seasonality is shifting — from winter-dominant residential heating (legacy) toward a bi-seasonal pattern (winter heating + summer cooling). Gas's share of power generation is the key variable: every nuclear outage, every coal restriction, every hot summer day adds LNG demand. S&P Global forecasts LNG imports rising to 55 mmt by 2029 (from 47 mmt in 2025).</div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Gas demand by sector 2019–2024 (Bcm)</div><div style="position:relative;height:240px;"><canvas id="korea-sect-hist"></canvas></div></div>
+      <div class="card"><div class="card-title">Monthly gas demand pattern (Bcm)</div><div style="position:relative;height:240px;"><canvas id="korea-seas"></canvas></div></div>
+    </div>
+    <div class="section-lbl">Sector narratives</div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title" style="color:var(--korea);">Power — 51% of gas demand</div>
+        <p style="font-size:11.5px;color:var(--dim);line-height:1.6;">Gas supplied 29% of Korea's electricity in 2024, rising to ~33% by 2029. Key drivers: coal plants shutting (fine dust policy), nuclear delays and retirements, grid congestion on east coast. In Aug 2024, gas-fired power surpassed winter levels for the first time — extreme summer cooling + restricted nuclear. This pattern will repeat.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--blue);">Industrial — 18% (growing)</div>
+        <p style="font-size:11.5px;color:var(--dim);line-height:1.6;">Gas demand in the industrial sector grew 4% YOY in 9M 2025 despite slower overall industrial production. Private LNG importers (POSCO, SK Group, GS Group) are increasingly buying direct for their own industrial gas needs. Market liberalisation is accelerating industrial LNG adoption — 25 entities now registered as direct importers.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--teal);">Residential — 18% (declining)</div>
+        <p style="font-size:11.5px;color:var(--dim);line-height:1.6;">Historically the dominant sector (45% in early 2000s, now 18%). The shift to electric heating is structural and ongoing. Warmer winters accelerate this trend. Residential sector now a drag on overall LNG growth — any cold winter provides a temporary uplift, but the structural direction is downward. KOGAS bears the brunt as the sole residential supplier.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- KOREA — Supply -->
+  <div class="panel" id="korea-supply">
+    <div class="grid-2">
+      <div class="card"><div class="card-title">LNG imports by source 2024 (mmt)</div><div style="position:relative;height:220px;"><canvas id="korea-lng-src"></canvas></div></div>
+      <div class="card">
+        <div class="card-title">Supply source matrix</div>
+        <table class="sup-table">
+          <thead><tr><th>Source</th><th>Volume (2024)</th><th>Reliability</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Australia (QCLNG, NWS, Gorgon)</td><td>~11 mmt (24%)</td><td><span class="tag tag-h">HIGH</span></td><td>Largest supplier; KOGAS long-term contracts + equity stakes</td></tr>
+            <tr><td>Qatar (QatarEnergy/RasGas)</td><td>~9 mmt (19%)</td><td><span class="tag tag-h">HIGH</span></td><td>Hormuz transit risk; KOGAS 25-yr contract backbone</td></tr>
+            <tr><td>Malaysia (MLNG)</td><td>~6.5 mmt (14%)</td><td><span class="tag tag-h">HIGH</span></td><td>PETRONAS long-term supply; plateau production</td></tr>
+            <tr><td>United States</td><td>~5.5 mmt (12%)</td><td><span class="tag tag-h">HIGH</span></td><td>KOGAS signed 3.3 mmt/yr new US contracts Aug 2025 (US-Korea trade deal)</td></tr>
+            <tr><td>Oman (Qalhat LNG)</td><td>~4.5 mmt (10%)</td><td><span class="tag tag-h">HIGH</span></td><td>KOGAS long-term contract; Hormuz adjacency risk</td></tr>
+            <tr><td>Indonesia + Russia + others</td><td>~9 mmt (21%)</td><td><span class="tag tag-m">MEDIUM</span></td><td>Russia declining share (geopolitical); Indonesia maturing</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- KOREA — LNG Profile -->
+  <div class="panel" id="korea-lng">
+    <div class="grid-2">
+      <div class="card"><div class="card-title">LNG imports monthly 2021–2025 (MMt)</div><div style="position:relative;height:230px;"><canvas id="korea-lng-mon"></canvas></div></div>
+      <div class="card"><div class="card-title">KOGAS vs non-KOGAS import share</div><div style="position:relative;height:230px;"><canvas id="korea-kogas"></canvas></div></div>
+    </div>
+    <div class="section-lbl">Key contract activity 2025</div>
+    <div class="card">
+      <div class="fi"><div class="fi-dot" style="background:var(--korea)"></div><div class="fi-content"><strong>KOGAS + US suppliers — Aug 2025 (3.3 MMtpa)</strong><p>Part of broader US-South Korea trade agreement. Includes Trafigura 0.7 MMtpa (from 2028, 10yr) and TotalEnergies 1 MMtpa HOA (from 2027, 10yr). Reduces spot exposure mid-decade.</p></div></div>
+      <div class="fi"><div class="fi-dot" style="background:var(--blue)"></div><div class="fi-content"><strong>Hyundai + KOEN (new direct importers) — Sep 2025</strong><p>Hyundai: 0.2 MMtpa from TotalEnergies (8yr, from 2027). KOEN: 0.5 MMtpa (from 2028). Both are first-time direct LNG buyers. Non-KOGAS players now hold 26% of Korea's LNG imports.</p></div></div>
+      <div class="fi"><div class="fi-dot" style="background:var(--amber)"></div><div class="fi-content"><strong>Special Act on National Resource Security (Feb 2025)</strong><p>Imposes stockpile requirements on all importers — public and private. Minimum inventory floors must be maintained. This structurally supports LNG demand regardless of spot economics.</p></div></div>
+    </div>
+  </div>
+
+  <!-- KOREA — Outlook -->
+  <div class="panel" id="korea-outlook">
+    <div class="grid-2">
+      <div class="card"><div class="card-title">LNG import forecast 2025–2032 (mmt)</div><div style="position:relative;height:220px;"><canvas id="korea-fcast"></canvas></div></div>
+      <div class="card">
+        <div class="card-title">Market summary card</div>
+        <div style="background:rgba(0,48,135,.06);border:1px solid rgba(0,48,135,.25);border-radius:8px;padding:14px;font-size:12px;color:var(--dim);line-height:1.7;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="color:var(--korea);font-family:'IBM Plex Mono',monospace;font-weight:600;">KOREA</span><span style="color:var(--lgreen,#4ade80);font-family:'IBM Plex Mono',monospace;">BULLISH TO 2029</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;font-size:11px;">
+            <span>LNG dependency:</span><span style="color:#fff;font-family:'IBM Plex Mono',monospace;">100%</span>
+            <span>Supply adequacy:</span><span style="color:#fbbf24;font-family:'IBM Plex Mono',monospace;">BALANCED</span>
+            <span>Supply security:</span><span style="color:#4ade80;font-family:'IBM Plex Mono',monospace;">HIGH</span>
+            <span>LNG 2026 forecast:</span><span style="color:#fff;font-family:'IBM Plex Mono',monospace;">48–50 mmt</span>
+            <span>LNG 2027 forecast:</span><span style="color:#fff;font-family:'IBM Plex Mono',monospace;">50–53 mmt</span>
+            <span>LNG peak (S&P):</span><span style="color:#fff;font-family:'IBM Plex Mono',monospace;">~55 mmt (2029–32)</span>
+          </div>
+          <p style="font-size:11px;line-height:1.6;"><strong style="color:var(--text);">View:</strong> Korea is the most bullish LNG market in Northeast Asia through 2029. Nuclear delays + coal restrictions = rising gas-fired power. Active contract signing in 2025 reduces spot exposure. Non-KOGAS liberalisation continues. Key risk post-2029: nuclear restarts (new builds + lifetime extensions) create a structural headwind.</p>
+          <div style="margin-top:10px;font-size:11px;"><strong style="color:var(--text);">Top risks:</strong><br>1. Nuclear builds accelerate + grid bottleneck resolved → gas crowded out by 2029 (MED)<br>2. Hormuz disruption → Qatar+Oman = 29% of supply at risk (HIGH: active threat)<br>3. Warm winters (structural) → residential demand erosion ongoing (HIGH probability)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KOREA — 2026 Monthly (from Scenario Dashboard) -->
+  <div class="panel" id="korea-monthly26">
+    <div class="sce-row">
+      <button class="sce-btn bull on" onclick="sceSw('korea','26','bull',this)">Bull (nuclear retire)</button>
+      <button class="sce-btn base" onclick="sceSw('korea','26','base',this)">Base (S&P trajectory)</button>
+      <button class="sce-btn bear" onclick="sceSw('korea','26','bear',this)">Bear (nuclear life ext.)</button>
+    </div>
+    <div class="metrics">
+      <div class="metric bull"><div class="m-label">Full year 2026</div><div class="m-val bull-c" id="k26-tot">—</div><div class="m-sub" id="k26-chg">—</div></div>
+      <div class="metric"><div class="m-label">H2 2026</div><div class="m-val" id="k26-h2">—</div><div class="m-sub">Jul–Dec</div></div>
+      <div class="metric"><div class="m-label">Peak month</div><div class="m-val" id="k26-pk">Jan</div><div class="m-sub" id="k26-pkv">—</div></div>
+      <div class="metric"><div class="m-label">Trough month</div><div class="m-val" id="k26-tr">Jun</div><div class="m-sub" id="k26-trv">—</div></div>
+    </div>
+    <div class="card" style="margin-bottom:13px;"><div class="card-title">2026 LNG imports — scenario comparison (mmt/month)</div><div style="position:relative;height:240px;"><canvas id="korea-26-line"></canvas></div></div>
+    <div class="card" style="margin-bottom:13px;"><div class="card-title">2026 base case — sector stack by month (Bcm)</div><div style="position:relative;height:220px;"><canvas id="korea-26-stack"></canvas></div></div>
+    <div class="section-lbl" id="korea-26-tbl-lbl">Monthly LNG by sector — Korea 2026 bull case (mmt)</div>
+    <div class="card"><div class="tbl-scroll"><table class="mtbl" id="korea-tbl26"></table></div></div>
+    <div class="section-lbl">Scenario comparison — monthly totals (mmt)</div>
+    <div class="card"><div class="tbl-scroll"><table class="ctbl" id="korea-ctbl26"></table></div></div>
+  </div>
+
+  <!-- KOREA — 2027 Monthly (from Scenario Dashboard) -->
+  <div class="panel" id="korea-monthly27">
+    <div class="sce-row">
+      <button class="sce-btn bull on" onclick="sceSw('korea','27','bull',this)">Bull (nuclear retire)</button>
+      <button class="sce-btn base" onclick="sceSw('korea','27','base',this)">Base (S&P trajectory)</button>
+      <button class="sce-btn bear" onclick="sceSw('korea','27','bear',this)">Bear (nuclear life ext.)</button>
+    </div>
+    <div class="metrics">
+      <div class="metric bull"><div class="m-label">Full year 2027</div><div class="m-val bull-c" id="k27-tot">—</div><div class="m-sub" id="k27-chg">—</div></div>
+      <div class="metric"><div class="m-label">H1 2027</div><div class="m-val" id="k27-h1">—</div><div class="m-sub">Jan–Jun</div></div>
+      <div class="metric"><div class="m-label">YOY increment</div><div class="m-val" id="k27-inc">—</div><div class="m-sub">vs 2025</div></div>
+      <div class="metric"><div class="m-label">Peak month</div><div class="m-val" id="k27-pk">Jan</div><div class="m-sub" id="k27-pkv">—</div></div>
+    </div>
+    <div class="card" style="margin-bottom:13px;"><div class="card-title">2027 LNG imports — scenario comparison (mmt/month)</div><div style="position:relative;height:240px;"><canvas id="korea-27-line"></canvas></div></div>
+    <div class="section-lbl" id="korea-27-tbl-lbl">Monthly LNG by sector — Korea 2027 bull case (mmt)</div>
+    <div class="card"><div class="tbl-scroll"><table class="mtbl" id="korea-tbl27"></table></div></div>
+    <div class="section-lbl">Scenario comparison — monthly totals (mmt)</div>
+    <div class="card"><div class="tbl-scroll"><table class="ctbl" id="korea-ctbl27"></table></div></div>
+  </div>
+
+  <!-- KOREA — Monthly Triggers (from Scenario Dashboard) -->
+  <div class="panel" id="korea-triggers">
+    <div class="insight korea">Korea's key triggers are nuclear availability and temperature. With 100% LNG dependence, any demand surprise is immediately visible in import data — there is no domestic production or pipeline buffer.</div>
+    <div class="trigger-item" style="border-color:var(--bull-border);background:var(--bull-bg);">
+      <div class="trigger-mon">Dec–Feb</div>
+      <div class="trigger-content">
+        <strong>Winter heating peak + fine dust coal shutdowns</strong>
+        <p><strong>Watch:</strong> KEPCO power generation mix data; coal plant shutdown count (7th Seasonal Fine Dust Plan); Incheon LNG terminal utilisation.<br><strong>Bull:</strong> Cold + 20+ coal plants offline → KOGAS supply tight; KOGAS calls spot cargoes; record monthly imports repeat (April/May/Aug 2025 precedent).<br><strong>Bear:</strong> Warm winter → KOGAS inventories stay elevated at 80%+ → no spot purchases; Feb–Mar imports fall 15–20% below trend.</p>
+      </div>
+    </div>
+    <div class="trigger-item" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05);">
+      <div class="trigger-mon" style="color:var(--amber);">Jul–Aug</div>
+      <div class="trigger-content">
+        <strong>Summer power peak — Korea's new demand season</strong>
+        <p><strong>Watch:</strong> KEPCO summer electricity demand vs supply; AC penetration index; POSCO/SK LNG terminal restocking rate.<br><strong>Bull:</strong> Heatwave + limited nuclear (maintenance season) → gas-fired power at peak; Aug 2024 precedent (gas power surpassed winter for first time). Non-KOGAS private power importers activate additional spot cargoes.<br><strong>Bear:</strong> Mild summer → gas power largely displaced by solar; private importers don't restock early.</p>
+      </div>
+    </div>
+    <div class="trigger-item" style="border-color:var(--base-border);background:var(--base-bg);">
+      <div class="trigger-mon">Apr–May</div>
+      <div class="trigger-content">
+        <strong>Post-winter restocking — inventory recovery</strong>
+        <p><strong>Watch:</strong> KOGAS storage fill rate vs 5-yr average; April/May import volumes (record months in 2025 after Feb cold snap).<br><strong>Bull:</strong> Cold winter depleted stocks → heavy restocking in spring → April/May imports sustained above 4 mmt/month (2025 was a record).<br><strong>Bear:</strong> Warm winter left storage at 87%+ → minimal restocking needed → Apr/May imports weak; spot market long.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end cp-korea -->
+
+<!-- ============================================================ COMPARE -->
+<div class="country-page" id="cp-compare">
+  <div class="panel active" id="compare-overview">
+    <div class="section-lbl">Three-country market comparison — 2025 baseline</div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">LNG import volumes 2019–2025 (mmt)</div>
+      <div style="position:relative;height:260px;"><canvas id="cmp-lng-hist"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Head-to-head market comparison</div>
+      <div class="cmp-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th style="min-width:160px;">Metric</th>
+            <th style="min-width:140px;">🇮🇳 India</th>
+            <th style="min-width:140px;">🇯🇵 Japan</th>
+            <th style="min-width:140px;">🇰🇷 Korea</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>2025 LNG imports (mmt)</td><td style="color:var(--india);">~25.6 mmt ↓ (2024: 27.3)</td><td style="color:var(--japan);">~65.6 mmt ↓ (2024: 66.9)</td><td style="color:var(--korea);">~47 mmt ↑ (2024: 46.5)</td></tr>
+          <tr><td>2026 LNG forecast</td><td>30–33 mmt</td><td>63–64 mmt (higher) / 61 (base)</td><td>48–50 mmt</td></tr>
+          <tr><td>2027 LNG forecast</td><td>33–37 mmt</td><td>58–61 mmt</td><td>50–53 mmt</td></tr>
+          <tr><td>Market direction</td><td style="color:#4ade80;">BULLISH ↑</td><td style="color:#f87171;">BEARISH ↓</td><td style="color:#4ade80;">BULLISH ↑ (to 2029)</td></tr>
+          <tr><td>Domestic production</td><td>~35 Bcm (declining)</td><td>~3 Bcm (minimal)</td><td>Zero</td></tr>
+          <tr><td>Pipeline imports</td><td>None</td><td>None</td><td>None</td></tr>
+          <tr><td>LNG dependency</td><td>~51%</td><td>~97%</td><td>100%</td></tr>
+          <tr><td>Dominant sector</td><td>Fertiliser/Petchem (38%)</td><td>Power (57%)</td><td>Power (51%)</td></tr>
+          <tr><td>Price sensitivity</td><td style="color:#f87171;">VERY HIGH (demand destruction &gt;$14)</td><td style="color:#fbbf24;">MEDIUM (inelastic city gas)</td><td style="color:#fbbf24;">MEDIUM (power responsive)</td></tr>
+          <tr><td>Nuclear role</td><td>Negligible</td><td>Structurally bearish for gas</td><td>Bullish (retirements) → bearish (new builds post-2029)</td></tr>
+          <tr><td>Key demand risk</td><td>JKM spike → demand cut</td><td>Nuclear restart pace</td><td>Nuclear build delays (upside) or acceleration (downside)</td></tr>
+          <tr><td>Contract coverage</td><td>~22 mmt term (growing)</td><td>Over-contracted (~12 mmt surplus)</td><td>~35 mmt term (growing via US deals)</td></tr>
+          <tr><td>Market liberalisation</td><td>Progressing (pipeline access reform)</td><td>Completed (2017)</td><td>Advancing (26% non-KOGAS)</td></tr>
+          <tr><td>JKM impact</td><td>Adds to downside risk (buyer at margin)</td><td>Re-seller — lower JKM = lower re-sale revenue</td><td>Adds to upside demand (spot buyer in winter/summer peaks)</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">LNG demand outlook — three countries combined</div>
+      <div style="position:relative;height:240px;"><canvas id="cmp-fcast"></canvas></div>
+    </div>
+  </div>
+</div><!-- end cp-compare -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// SHARED THEME
+// ═══════════════════════════════════════════════════════════════════
+const T = {
+  india:'#ff9933', japan:'#bc002d', korea:'#003087',
+  blue:'#3b82f6', teal:'#14b8a6', green:'#22c55e', amber:'#f59e0b',
+  coral:'#f97316', red:'#ef4444', purple:'#8b5cf6', gray:'#5a7291',
+  lblue:'#60a5fa', lbase:'#60a5fa',
+  bull:'#22c55e', base:'#3b82f6', bear:'#ef4444',
+  lbull:'#4ade80', lbear:'#fca5a5',
+  grid:'rgba(255,255,255,.05)', text:'#8aa3be'
+};
+Chart.defaults.color = T.text;
+Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+Chart.defaults.plugins.legend.labels.padding = 11;
+
+const TT = {
+  backgroundColor:'#0e1520', borderColor:'#1a2d45', borderWidth:1,
+  titleColor:'#dde5f0', bodyColor:'#8aa3be', padding:9
+};
+const baseOpts = (e={}) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{display:false}, tooltip:TT },
+  scales:{
+    x:{ grid:{color:T.grid}, ticks:{color:T.text, font:{size:10}} },
+    y:{ grid:{color:T.grid}, ticks:{color:T.text, font:{size:10}} }
+  }, ...e
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// NAVIGATION STATE
+// ═══════════════════════════════════════════════════════════════════
+let curCountry = 'india', curTab = 'overview';
+const chartsInit = {};
+
+// Panel ID mapping: for dashboard-1 tabs, panel = `${country}-${tab}`;
+// for scenario tabs (monthly26, monthly27, triggers), same pattern.
+// Compare country always uses 'compare-overview' regardless of tab.
+function switchCountry(c, btn) {
+  curCountry = c;
+  document.querySelectorAll('.country-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const page = document.getElementById('cp-' + c);
+  if (page) {
+    page.classList.add('active');
+    page.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    const firstPanel = page.querySelector('#' + c + '-overview') || page.querySelector('.panel');
+    if (firstPanel) firstPanel.classList.add('active');
+  }
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.remove('active');
+    if (i === 0) t.classList.add('active');
+  });
+  curTab = 'overview';
+  initCharts();
+}
+
+function switchTab(tab, btn) {
+  curTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const page = document.getElementById('cp-' + curCountry);
+  if (!page) return;
+  page.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const panelId = curCountry === 'compare' ? 'compare-overview' : `${curCountry}-${tab}`;
+  const panel = document.getElementById(panelId);
+  if (panel) panel.classList.add('active');
+  initCharts();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DASHBOARD 1 CHARTS (lazy init)
+// ═══════════════════════════════════════════════════════════════════
+function initCharts() {
+
+  // India sector historical
+  if (!chartsInit['india-sect-hist'] && document.getElementById('india-sect-hist')) {
+    chartsInit['india-sect-hist'] = 1;
+    new Chart(document.getElementById('india-sect-hist'), {type:'bar', data:{labels:['2020','2021','2022','2023','2024','2025'], datasets:[
+      {label:'Fertiliser/Petchem', data:[68,71,66,74,80,76], backgroundColor:T.amber, stack:'s'},
+      {label:'Power',              data:[32,34,30,32,35,34], backgroundColor:T.blue,  stack:'s'},
+      {label:'Industrial',         data:[36,38,35,38,42,44], backgroundColor:T.coral, stack:'s'},
+      {label:'CGD',                data:[28,30,30,33,37,40], backgroundColor:T.teal,  stack:'s'},
+      {label:'Other',              data:[5, 5, 5, 5, 5, 6],  backgroundColor:T.gray,  stack:'s'},
+    ]}, options:{...baseOpts(), plugins:{legend:{display:true,labels:{color:T.text,font:{size:9.5},boxWidth:9,padding:8}},tooltip:TT},
+      scales:{x:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'Bcm',color:T.text}}}}});
+  }
+  if (!chartsInit['india-sect-pie'] && document.getElementById('india-sect-pie')) {
+    chartsInit['india-sect-pie'] = 1;
+    new Chart(document.getElementById('india-sect-pie'), {type:'doughnut', data:{
+      labels:['Fertiliser/Petchem 38%','Power 17%','Industrial 22%','CGD 20%','Other 3%'],
+      datasets:[{data:[76,34,44,40,6], backgroundColor:[T.amber,T.blue,T.coral,T.teal,T.gray], borderWidth:1.5, borderColor:'#131e2f'}]
+    }, options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{display:true,position:'right',labels:{color:T.text,font:{size:9.5},boxWidth:9,padding:7}},
+               tooltip:{...TT,callbacks:{label:c=>`  ${c.label}: ${c.parsed} Bcm`}}}}});
+  }
+  if (!chartsInit['india-lng-src'] && document.getElementById('india-lng-src')) {
+    chartsInit['india-lng-src'] = 1;
+    new Chart(document.getElementById('india-lng-src'), {type:'doughnut', data:{
+      labels:['Qatar 24%','USA 12%','UAE 11%','Russia 8%','Nigeria 7%','Australia 6%','Others 32%'],
+      datasets:[{data:[6.2,3.1,2.9,2.1,1.8,1.6,8.3], backgroundColor:[T.amber,T.blue,T.teal,T.coral,T.gray,T.green,T.purple], borderWidth:1.5, borderColor:'#131e2f'}]
+    }, options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{display:true,position:'right',labels:{color:T.text,font:{size:9.5},boxWidth:9,padding:6}},
+               tooltip:{...TT,callbacks:{label:c=>`  ${c.label}: ${c.parsed.toFixed(1)} mmt`}}}}});
+  }
+  if (!chartsInit['india-lng-hist'] && document.getElementById('india-lng-hist')) {
+    chartsInit['india-lng-hist'] = 1;
+    new Chart(document.getElementById('india-lng-hist'), {type:'bar', data:{
+      labels:['2018','2019','2020','2021','2022','2023','2024','2025E'],
+      datasets:[{data:[21.6,26.3,26.2,24.0,20.7,23.1,27.3,25.6],
+        backgroundColor:[T.india+'88',T.india+'88',T.india+'88',T.india+'88',T.india+'88',T.india+'88',T.india,T.amber], borderRadius:4}]
+    }, options:{...baseOpts(), scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+      y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'mmt',color:T.text}}},
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>`  ${c.parsed.y.toFixed(1)} mmt`}}}}});
+  }
+  if (!chartsInit['india-seas'] && document.getElementById('india-seas')) {
+    chartsInit['india-seas'] = 1;
+    const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    new Chart(document.getElementById('india-seas'), {type:'line', data:{labels:M, datasets:[
+      {label:'Typical monthly (kt)', data:[2200,2000,2300,2100,2100,2000,2200,2300,2200,2300,2400,2500],
+       borderColor:T.india, backgroundColor:'rgba(255,153,51,.08)', fill:true, tension:0.3, pointRadius:4, borderWidth:2}
+    ]}, options:{...baseOpts(),plugins:{legend:{display:false},tooltip:TT},
+      scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'Thousand tonnes',color:T.text}}}}});
+  }
+  if (!chartsInit['india-fcast'] && document.getElementById('india-fcast')) {
+    chartsInit['india-fcast'] = 1;
+    new Chart(document.getElementById('india-fcast'), {type:'line', data:{labels:['2025','2026','2027','2028','2029','2030'], datasets:[
+      {label:'Bull', data:[28,33,37,42,47,52], borderColor:T.green, fill:false, tension:0.3, pointRadius:4, borderWidth:2},
+      {label:'Base', data:[28,31,34,38,42,47], borderColor:T.amber, fill:false, tension:0.3, pointRadius:4, borderWidth:2},
+      {label:'Bear', data:[28,28,30,32,35,38], borderColor:T.red,   fill:false, tension:0.3, pointRadius:4, borderWidth:2},
+    ]}, options:{...baseOpts(),plugins:{legend:{display:true,labels:{color:T.text,font:{size:10},boxWidth:9,padding:10}},tooltip:TT},
+      scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'mmt',color:T.text}}}}});
+  }
+
+  // Japan charts
+  if (!chartsInit['japan-lng-trend'] && document.getElementById('japan-lng-trend')) {
+    chartsInit['japan-lng-trend'] = 1;
+    new Chart(document.getElementById('japan-lng-trend'), {type:'bar', data:{
+      labels:['2019','2020','2021','2022','2023','2024','2025E'],
+      datasets:[{data:[75.0,74.8,73.0,71.4,69.0,66.9,65.6],
+        backgroundColor:[T.japan+'55',T.japan+'55',T.japan+'55',T.japan+'55',T.japan+'55',T.japan,T.amber], borderRadius:4}]
+    }, options:{...baseOpts(), scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+      y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'mmt',color:T.text},min:50}},
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>`  ${c.parsed.y.toFixed(1)} mmt`}}}}});
+  }
+  if (!chartsInit['japan-power'] && document.getElementById('japan-power')) {
+    chartsInit['japan-power'] = 1;
+    new Chart(document.getElementById('japan-power'), {type:'doughnut', data:{
+      labels:['Gas/LNG 33%','Coal 30%','Nuclear 9%','Renewables 22%','Oil+Other 6%'],
+      datasets:[{data:[33,30,9,22,6], backgroundColor:[T.japan,T.gray,T.amber,T.green,T.coral], borderWidth:1.5, borderColor:'#131e2f'}]
+    }, options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{display:true,position:'right',labels:{color:T.text,font:{size:10},boxWidth:9,padding:7}},tooltip:TT}}});
+  }
+  if (!chartsInit['japan-lng-src'] && document.getElementById('japan-lng-src')) {
+    chartsInit['japan-lng-src'] = 1;
+    new Chart(document.getElementById('japan-lng-src'), {type:'doughnut', data:{
+      labels:['Australia 39%','Malaysia 16%','Russia 14%','Qatar 8%','USA 7%','Others 16%'],
+      datasets:[{data:[24.2,9.9,8.7,5.0,4.3,9.9], backgroundColor:[T.teal,T.amber,T.coral,T.blue,T.lblue,T.gray], borderWidth:1.5, borderColor:'#131e2f'}]
+    }, options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{display:true,position:'right',labels:{color:T.text,font:{size:10},boxWidth:9,padding:7}},
+               tooltip:{...TT,callbacks:{label:c=>`  ${c.label}: ${c.parsed.toFixed(1)} mmt`}}}}});
+  }
+  if (!chartsInit['japan-seas'] && document.getElementById('japan-seas')) {
+    chartsInit['japan-seas'] = 1;
+    const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    new Chart(document.getElementById('japan-seas'), {type:'line', data:{labels:M, datasets:[
+      {label:'2024',  data:[6.4,5.6,5.8,5.2,4.9,4.7,5.1,5.2,4.9,5.0,5.4,6.3], borderColor:T.japan+'88', fill:false, tension:0.3, pointRadius:3, borderWidth:1.5, borderDash:[4,3]},
+      {label:'2025E', data:[6.0,5.2,5.5,4.8,4.6,4.5,4.8,5.0,4.7,4.8,5.2,6.0], borderColor:T.japan,      fill:false, tension:0.3, pointRadius:4, borderWidth:2},
+    ]}, options:{...baseOpts(),plugins:{legend:{display:true,labels:{color:T.text,font:{size:10},boxWidth:9,padding:10}},tooltip:TT},
+      scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'Bcm/month',color:T.text}}}}});
+  }
+  if (!chartsInit['japan-resell'] && document.getElementById('japan-resell')) {
+    chartsInit['japan-resell'] = 1;
+    new Chart(document.getElementById('japan-resell'), {type:'bar', data:{
+      labels:['2018','2019','2020','2021','2022','2023','2024'],
+      datasets:[
+        {label:'Domestic consumption', data:[79,75,74,73,71,69,66], backgroundColor:T.japan, stack:'j'},
+        {label:'Overseas resale',       data:[14,18,24,28,32,38,44], backgroundColor:T.amber, stack:'j'},
+      ]
+    }, options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:T.text,font:{size:10},boxWidth:9,padding:10}},tooltip:TT},
+      scales:{x:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'mmt',color:T.text}}}}});
+  }
+  if (!chartsInit['japan-fcast'] && document.getElementById('japan-fcast')) {
+    chartsInit['japan-fcast'] = 1;
+    new Chart(document.getElementById('japan-fcast'), {type:'line', data:{labels:['2025','2026','2027','2028','2029','2030'], datasets:[
+      {label:'Higher (nuclear delays)', data:[62,62,61,60,60,59], borderColor:T.amber,  fill:false, tension:0.3, pointRadius:4, borderWidth:2},
+      {label:'Base',                    data:[62,61,59,57,55,53], borderColor:T.japan,  fill:false, tension:0.3, pointRadius:4, borderWidth:2},
+      {label:'Lower (fast nuclear)',    data:[62,60,57,53,50,48], borderColor:T.red,    fill:false, tension:0.3, pointRadius:4, borderWidth:2},
+    ]}, options:{...baseOpts(),plugins:{legend:{display:true,labels:{color:T.text,font:{size:10},boxWidth:9,padding:10}},tooltip:TT},
+      scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},min:42,title:{display:true,text:'mmt',color:T.text}}}}});
+  }
+
+  // Korea charts
+  if (!chartsInit['korea-sect-hist'] && document.getElementById('korea-sect-hist')) {
+    chartsInit['korea-sect-hist'] = 1;
+    new Chart(document.getElementById('korea-sect-hist'), {type:'bar', data:{labels:['2019','2020','2021','2022','2023','2024'], datasets:[
+      {label:'Power',      data:[28,26,28,29,28,30], backgroundColor:T.korea, stack:'k'},
+      {label:'Industrial', data:[8, 8, 9,10,10,11], backgroundColor:T.blue,  stack:'k'},
+      {label:'Residential',data:[13,13,14,13,12,11], backgroundColor:T.teal,  stack:'k'},
+      {label:'Commercial', data:[5, 5, 5, 5, 5, 5], backgroundColor:T.amber, stack:'k'},
+      {label:'Other',      data:[2, 2, 2, 2, 2, 2], backgroundColor:T.gray,  stack:'k'},
+    ]}, options:{...baseOpts(),plugins:{legend:{display:true,labels:{color:T.text,font:{size:9.5},boxWidth:9,padding:8}},tooltip:TT},
+      scales:{x:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'Bcm',color:T.text}}}}});
+  }
+  if (!chartsInit['korea-seas'] && document.getElementById('korea-seas')) {
+    chartsInit['korea-seas'] = 1;
+    const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    new Chart(document.getElementById('korea-seas'), {type:'line', data:{labels:M, datasets:[
+      {label:'2024',  data:[6.8,6.1,5.4,4.7,4.2,4.5,5.1,5.8,4.9,4.8,5.2,6.5], borderColor:T.korea+'88', fill:false, tension:0.3, pointRadius:3, borderWidth:1.5, borderDash:[4,3]},
+      {label:'2025E', data:[6.9,6.5,5.5,5.2,4.5,4.6,5.0,5.5,4.8,4.8,5.0,6.4], borderColor:T.korea,      fill:false, tension:0.3, pointRadius:4, borderWidth:2},
+    ]}, options:{...baseOpts(),plugins:{legend:{display:true,labels:{color:T.text,font:{size:10},boxWidth:9,padding:10}},tooltip:TT},
+      scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'Bcm/month',color:T.text}}}}});
+  }
+  if (!chartsInit['korea-lng-src'] && document.getElementById('korea-lng-src')) {
+    chartsInit['korea-lng-src'] = 1;
+    new Chart(document.getElementById('korea-lng-src'), {type:'doughnut', data:{
+      labels:['Australia 24%','Qatar 19%','Malaysia 14%','USA 12%','Oman 10%','Indonesia 7%','Russia 5%','Others 9%'],
+      datasets:[{data:[11.2,8.8,6.5,5.6,4.7,3.3,2.3,4.1], backgroundColor:[T.teal,T.amber,T.blue,T.lblue,T.coral,T.green,T.red,T.gray], borderWidth:1.5, borderColor:'#131e2f'}]
+    }, options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{legend:{display:true,position:'right',labels:{color:T.text,font:{size:9},boxWidth:9,padding:6}},
+               tooltip:{...TT,callbacks:{label:c=>`  ${c.label}: ${c.parsed.toFixed(1)} mmt`}}}}});
+  }
+  if (!chartsInit['korea-lng-mon'] && document.getElementById('korea-lng-mon')) {
+    chartsInit['korea-lng-mon'] = 1;
+    const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    new Chart(document.getElementById('korea-lng-mon'), {type:'bar', data:{labels:M, datasets:[
+      {label:'2024',  data:[4.8,4.3,3.9,3.5,3.1,3.3,3.7,4.1,3.6,3.4,3.7,4.6], backgroundColor:T.korea+'55', stack:'y'},
+      {label:'2025E', data:[4.9,4.7,4.0,4.2,3.7,3.5,3.8,4.4,3.7,3.5,3.9,4.7], backgroundColor:T.korea,      stack:'y2'},
+    ]}, options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:T.text,font:{size:10},boxWidth:9,padding:10}},tooltip:TT},
+      scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'mmt',color:T.text}}}}});
+  }
+  if (!chartsInit['korea-kogas'] && document.getElementById('korea-kogas')) {
+    chartsInit['korea-kogas'] = 1;
+    new Chart(document.getElementById('korea-kogas'), {type:'bar', data:{
+      labels:['2018','2019','2020','2021','2022','2023','2024','2025E'],
+      datasets:[
+        {label:'KOGAS',     data:[91,90,90,88,86,80,74,72], backgroundColor:T.korea, stack:'kg'},
+        {label:'Non-KOGAS', data:[9, 10,10,12,14,20,26,28], backgroundColor:T.amber, stack:'kg'},
+      ]
+    }, options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:T.text,font:{size:10},boxWidth:9,padding:10}},
+               tooltip:{...TT,callbacks:{label:c=>`  ${c.dataset.label}: ${c.parsed.y}%`}}},
+      scales:{x:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{stacked:true,max:100,grid:{color:T.grid},ticks:{color:T.text,font:{size:10},callback:v=>v+'%'},title:{display:true,text:'Import share (%)',color:T.text}}}}});
+  }
+  if (!chartsInit['korea-fcast'] && document.getElementById('korea-fcast')) {
+    chartsInit['korea-fcast'] = 1;
+    new Chart(document.getElementById('korea-fcast'), {type:'line', data:{labels:['2025','2026','2027','2028','2029','2030','2031','2032'], datasets:[
+      {label:'S&P Global base',   data:[47,49,51,53,55,54,52,50], borderColor:T.korea,       fill:false, tension:0.3, pointRadius:4, borderWidth:2.2},
+      {label:'11th BPE (govt plan)',data:[47,48,49,50,51,49,47,45],borderColor:T.korea+'66', borderDash:[5,4], fill:false, tension:0.3, pointRadius:3, borderWidth:1.5},
+    ]}, options:{...baseOpts(),plugins:{legend:{display:true,labels:{color:T.text,font:{size:10},boxWidth:9,padding:10}},tooltip:TT},
+      scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},min:40,title:{display:true,text:'mmt',color:T.text}}}}});
+  }
+
+  // Compare charts
+  if (!chartsInit['cmp-lng-hist'] && document.getElementById('cmp-lng-hist')) {
+    chartsInit['cmp-lng-hist'] = 1;
+    new Chart(document.getElementById('cmp-lng-hist'), {type:'line', data:{labels:['2019','2020','2021','2022','2023','2024','2025E'], datasets:[
+      {label:'🇮🇳 India', data:[26.3,26.2,24.0,20.7,23.1,27.3,25.6], borderColor:T.india, fill:false, tension:0.3, pointRadius:5, borderWidth:2.2},
+      {label:'🇯🇵 Japan', data:[75.0,74.8,73.0,71.4,69.0,66.9,65.6], borderColor:T.japan, fill:false, tension:0.3, pointRadius:5, borderWidth:2.2},
+      {label:'🇰🇷 Korea', data:[40.1,40.3,46.4,47.1,44.8,46.5,47.0], borderColor:T.korea, fill:false, tension:0.3, pointRadius:5, borderWidth:2.2},
+    ]}, options:{...baseOpts(),plugins:{legend:{display:true,labels:{color:T.text,font:{size:11},boxWidth:10,padding:12}},tooltip:TT},
+      scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'mmt',color:T.text}}}}});
+  }
+  if (!chartsInit['cmp-fcast'] && document.getElementById('cmp-fcast')) {
+    chartsInit['cmp-fcast'] = 1;
+    new Chart(document.getElementById('cmp-fcast'), {type:'bar', data:{labels:['2025E','2026F','2027F','2028F','2029F','2030F'], datasets:[
+      {label:'🇮🇳 India', data:[28,31,34,38,42,47], backgroundColor:T.india, stack:'s'},
+      {label:'🇰🇷 Korea', data:[47,49,51,53,55,54], backgroundColor:T.korea, stack:'s2'},
+      {label:'🇯🇵 Japan', data:[62,61,59,57,55,53], backgroundColor:T.japan, stack:'s3'},
+    ]}, options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:T.text,font:{size:11},boxWidth:10,padding:12}},tooltip:TT},
+      scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+              y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'mmt',color:T.text}}}}});
+  }
+}
+
+// Init on load
+initCharts();
+
+// ═══════════════════════════════════════════════════════════════════
+// SCENARIO MODEL DATA & LOGIC  (from ijk_gas_scenario_dashboard)
+// ═══════════════════════════════════════════════════════════════════
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Annual LNG totals (mmt) by country, year, scenario
+const ANN = {
+  india: { '26':{bull:30,base:28,bear:25}, '27':{bull:34,base:31,bear:28}, base25:25.6 },
+  japan: { '26':{bull:65,base:63,bear:60}, '27':{bull:64,base:61,bear:57}, base25:65.6 },
+  korea: { '26':{bull:50,base:48,bear:45}, '27':{bull:53,base:51,bear:47}, base25:46.5 }
+};
+
+// 2025 monthly actuals (mmt)
+const ACT25 = {
+  india: [2.4,2.1,2.5,2.3,2.2,2.1,2.4,2.5,2.3,2.5,2.5,2.7],
+  japan: [6.0,5.2,5.5,4.8,4.6,4.5,4.8,5.0,4.7,4.8,5.2,6.0],
+  korea: [4.9,4.7,4.0,4.3,3.9,3.5,3.8,4.6,4.0,3.6,3.8,null]
+};
+
+// Seasonal indices (normalised to sum = 12)
+const SEAS = {
+  india: [1.03,0.88,1.06,0.97,0.93,0.88,1.01,1.05,0.97,1.06,1.05,1.12],
+  japan: [1.16,0.97,1.03,0.91,0.86,0.84,0.90,0.93,0.88,0.90,0.97,1.12],
+  korea: [1.20,1.09,0.93,0.97,0.86,0.81,0.88,1.02,0.86,0.81,0.91,1.09]
+};
+for (const k in SEAS) {
+  const s = SEAS[k].reduce((a,b) => a+b, 0);
+  SEAS[k] = SEAS[k].map(v => v / s * 12);
+}
+
+// Sector definitions per country
+const SECT = {
+  india: {
+    keys:  ['fert','power','indust','cgd'],
+    names: ['Fertiliser/Petchem','Power','Industrial','CGD/Other'],
+    clrs:  [T.amber, T.blue, T.coral, T.teal],
+    sh25:  {fert:0.38, power:0.17, indust:0.22, cgd:0.23},
+    mult26:{bull:{fert:1.10,power:1.02,indust:1.07,cgd:1.12}, base:{fert:1.05,power:1.00,indust:1.03,cgd:1.07}, bear:{fert:0.98,power:0.97,indust:0.98,cgd:1.01}},
+    mult27:{bull:{fert:1.18,power:1.02,indust:1.12,cgd:1.20}, base:{fert:1.10,power:1.00,indust:1.07,cgd:1.12}, bear:{fert:1.00,power:0.95,indust:1.00,cgd:1.04}}
+  },
+  japan: {
+    keys:  ['power','citygas','indust','other'],
+    names: ['Power','City gas','Industrial','Other/Bunker'],
+    clrs:  [T.japan, '#60a5fa', T.teal, T.gray],
+    sh25:  {power:0.57, citygas:0.21, indust:0.16, other:0.06},
+    mult26:{bull:{power:1.02,citygas:0.99,indust:0.99,other:1.00}, base:{power:0.97,citygas:0.98,indust:0.99,other:1.00}, bear:{power:0.93,citygas:0.97,indust:0.98,other:1.00}},
+    mult27:{bull:{power:1.01,citygas:0.98,indust:0.99,other:1.00}, base:{power:0.95,citygas:0.97,indust:0.99,other:1.00}, bear:{power:0.88,citygas:0.96,indust:0.97,other:1.00}}
+  },
+  korea: {
+    keys:  ['power','indust','resi','com'],
+    names: ['Power','Industrial','Residential','Commercial'],
+    clrs:  [T.korea, T.blue, T.teal, T.amber],
+    sh25:  {power:0.51, indust:0.18, resi:0.18, com:0.13},
+    mult26:{bull:{power:1.09,indust:1.05,resi:0.97,com:1.02}, base:{power:1.04,indust:1.03,resi:0.96,com:1.01}, bear:{power:0.98,indust:1.00,resi:0.94,com:0.99}},
+    mult27:{bull:{power:1.14,indust:1.08,resi:0.95,com:1.03}, base:{power:1.08,indust:1.05,resi:0.94,com:1.02}, bear:{power:1.00,indust:1.02,resi:0.92,com:0.99}}
+  }
+};
+
+function buildMonthly(country, yr, sce) {
+  const total = ANN[country][yr][sce];
+  const s = SEAS[country];
+  const monthly = s.map(f => +(total / 12 * f).toFixed(3));
+  const sd = SECT[country];
+  const multKey = 'mult' + yr;
+  const rows = {};
+  sd.keys.forEach(k => {
+    rows[k] = monthly.map(v => +(v * sd.sh25[k] * sd[multKey][sce][k]).toFixed(3));
+  });
+  return { monthly, rows };
+}
+
+// ── TABLE BUILDERS ────────────────────────────────────────────────
+function buildSectTbl(el, country, yr, sce) {
+  const { rows, monthly } = buildMonthly(country, yr, sce);
+  const sd = SECT[country];
+  el.innerHTML = '';
+  const thead = document.createElement('thead');
+  const htr = document.createElement('tr');
+  ['Sector', ...MONTHS, 'FY'].forEach(h => { const th = document.createElement('th'); th.textContent = h; htr.appendChild(th); });
+  thead.appendChild(htr); el.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  sd.keys.forEach((k, i) => {
+    const tr = document.createElement('tr');
+    [sd.names[i], ...rows[k].map(v => v.toFixed(2)), rows[k].reduce((a,b) => a+b, 0).toFixed(1)].forEach(v => {
+      const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  const tr = document.createElement('tr');
+  ['TOTAL', ...monthly.map(v => v.toFixed(2)), monthly.reduce((a,b) => a+b, 0).toFixed(1)].forEach(v => {
+    const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+  });
+  tbody.appendChild(tr); el.appendChild(tbody);
+}
+
+function buildCompTbl(el, country, yr) {
+  const gdpMap = {
+    india: {bull:'6.8%', base:'6.4%', bear:'5.8%'},
+    japan: {bull:'Nuclear delays', base:'Gradual restart', bear:'Fast+warm'},
+    korea: {bull:'Nuclear retire', base:'S&P base', bear:'Life ext.'}
+  };
+  const { monthly:mb } = buildMonthly(country, yr, 'bull');
+  const { monthly:ms } = buildMonthly(country, yr, 'base');
+  const { monthly:mr } = buildMonthly(country, yr, 'bear');
+  const spread = mb.map((v,i) => +(v - mr[i]).toFixed(2));
+  el.innerHTML = '';
+  const thead = document.createElement('thead');
+  const htr = document.createElement('tr');
+  ['Case', ...MONTHS, 'FY'].forEach(h => { const th = document.createElement('th'); th.textContent = h; htr.appendChild(th); });
+  thead.appendChild(htr); el.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  [
+    [`Bull (${gdpMap[country].bull})`, mb,     'bull-row'],
+    [`Base (${gdpMap[country].base})`, ms,     'base-row'],
+    [`Bear (${gdpMap[country].bear})`, mr,     'bear-row'],
+    ['Bull−Bear',                       spread, 'spread-row']
+  ].forEach(([lbl, data, cls]) => {
+    const row = document.createElement('tr'); row.className = cls;
+    [lbl, ...data.map(v => v.toFixed(2)), data.reduce((a,b) => a+b, 0).toFixed(1)].forEach(v => {
+      const td = document.createElement('td'); td.textContent = v; row.appendChild(td);
+    });
+    tbody.appendChild(row);
+  });
+  el.appendChild(tbody);
+}
+
+// ── METRICS UPDATE ────────────────────────────────────────────────
+const sceCls = { bull:'bull-c', base:'base-c', bear:'bear-c' };
+
+function updateMetrics(country, yr, sce) {
+  const { monthly } = buildMonthly(country, yr, sce);
+  const sum   = +monthly.reduce((a,b) => a+b, 0).toFixed(1);
+  const base25 = ANN[country].base25;
+  const pct   = ((sum / base25 - 1) * 100).toFixed(1);
+  const h2    = +monthly.slice(6).reduce((a,b) => a+b, 0).toFixed(1);
+  const h1    = +monthly.slice(0,6).reduce((a,b) => a+b, 0).toFixed(1);
+  const peak  = Math.max(...monthly);
+  const trough = Math.min(...monthly);
+  const pk    = MONTHS[monthly.indexOf(peak)];
+  const tr    = MONTHS[monthly.indexOf(trough)];
+  // prefix: i = india, j = japan, k = korea
+  const pfx = { india:'i', japan:'j', korea:'k' }[country];
+
+  if (yr === '26') {
+    const el = document.getElementById(pfx + '26-tot');
+    if (el) { el.textContent = sum + ' mmt'; el.className = 'm-val ' + sceCls[sce]; }
+    const chg = document.getElementById(pfx + '26-chg');
+    if (chg) chg.textContent = (pct > 0 ? '+' : '') + pct + '% vs 2025';
+    const h = document.getElementById(pfx + '26-h2'); if (h) h.textContent = h2 + ' mmt';
+    const pkEl = document.getElementById(pfx + '26-pk');  if (pkEl) pkEl.textContent = pk;
+    const pkvEl = document.getElementById(pfx + '26-pkv'); if (pkvEl) pkvEl.textContent = peak.toFixed(2) + ' mmt';
+    const trEl = document.getElementById(pfx + '26-tr');  if (trEl) trEl.textContent = tr;
+    const trvEl = document.getElementById(pfx + '26-trv'); if (trvEl) trvEl.textContent = trough.toFixed(2) + ' mmt';
+  } else {
+    const el = document.getElementById(pfx + '27-tot');
+    if (el) { el.textContent = sum + ' mmt'; el.className = 'm-val ' + sceCls[sce]; }
+    const chg = document.getElementById(pfx + '27-chg'); if (chg) chg.textContent = (pct > 0 ? '+' : '') + pct + '% vs 2025';
+    const h = document.getElementById(pfx + '27-h1'); if (h) h.textContent = h1 + ' mmt';
+    const inc = document.getElementById(pfx + '27-inc'); if (inc) inc.textContent = (sum - base25 > 0 ? '+' : '') + (sum - base25).toFixed(1) + ' mmt';
+    const pkEl = document.getElementById(pfx + '27-pk');  if (pkEl) pkEl.textContent = pk;
+    const pkvEl = document.getElementById(pfx + '27-pkv'); if (pkvEl) pkvEl.textContent = peak.toFixed(2) + ' mmt';
+  }
+}
+
+// ── LINE CHARTS ───────────────────────────────────────────────────
+const lineOpts = (yLabel, yMin) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{display:true,labels:{color:T.text,font:{size:10},boxWidth:9,padding:10}},tooltip:TT},
+  scales:{x:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+          y:{grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},min:yMin||0,title:{display:true,text:yLabel,color:T.text}}}
+});
+
+const CI = {}; // scenario chart init tracker (separate from chartsInit)
+
+function buildLineChart(chartId, country, yr) {
+  if (CI[chartId] || !document.getElementById(chartId)) return;
+  CI[chartId] = 1;
+  const bull = buildMonthly(country, yr, 'bull').monthly;
+  const base = buildMonthly(country, yr, 'base').monthly;
+  const bear = buildMonthly(country, yr, 'bear').monthly;
+  const yMin = Math.min(...bear) - 0.5;
+  new Chart(document.getElementById(chartId), {type:'line', data:{labels:MONTHS, datasets:[
+    {label:'2025 actual', data:ACT25[country], borderColor:'#475569', borderDash:[4,3], fill:false, tension:0.3, pointRadius:3, borderWidth:1.5, order:4},
+    {label:'Bull',        data:bull,            borderColor:T.bull,   fill:false, tension:0.3, pointRadius:4, borderWidth:2.2, order:1},
+    {label:'Base',        data:base,            borderColor:T.base,   fill:false, tension:0.3, pointRadius:4, borderWidth:2.2, order:2},
+    {label:'Bear',        data:bear,            borderColor:T.bear,   fill:false, tension:0.3, pointRadius:4, borderWidth:2.2, order:3},
+  ]}, options:lineOpts('mmt/month', yMin)});
+}
+
+function buildSectStackChart(chartId, country, yr, sce) {
+  if (CI[chartId] || !document.getElementById(chartId)) return;
+  CI[chartId] = 1;
+  const { rows, monthly } = buildMonthly(country, yr, sce);
+  const sd = SECT[country];
+  new Chart(document.getElementById(chartId), {type:'bar', data:{labels:MONTHS, datasets:[
+    ...sd.keys.map((k,i) => ({label:sd.names[i], data:rows[k], backgroundColor:sd.clrs[i], stack:'s', borderWidth:0})),
+    {label:'Total', data:monthly, type:'line', borderColor:'#fff', borderWidth:1.5, fill:false, tension:0.3, pointRadius:3, order:-1}
+  ]}, options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:T.text,font:{size:10},boxWidth:9,padding:10}},tooltip:TT},
+    scales:{x:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}}},
+            y:{stacked:true,grid:{color:T.grid},ticks:{color:T.text,font:{size:10}},title:{display:true,text:'mmt/month',color:T.text}}}}});
+}
+
+// ── SCENARIO SWITCH ───────────────────────────────────────────────
+const sceLblMap = {
+  india: {bull:'Bull 2026 (GDP 6.8%)', base:'Base 2026 (GDP 6.4%)', bear:'Bear 2026 (GDP 5.8%)'},
+  japan: {bull:'Bull 2026 (nuclear delays)', base:'Base 2026 (gradual restart)', bear:'Bear 2026 (fast+warm)'},
+  korea: {bull:'Bull 2026 (nuclear retirements)', base:'Base 2026 (S&P trajectory)', bear:'Bear 2026 (life extensions)'}
+};
+
+function sceSw(country, yr, sce, btn) {
+  const panel = document.getElementById(`${country}-monthly${yr}`);
+  if (!panel) return;
+  panel.querySelectorAll('.sce-btn').forEach(b => { b.className = b.className.replace(' on',''); });
+  btn.className += ' on';
+  const tbl = document.getElementById(`${country}-tbl${yr}`);
+  if (tbl) buildSectTbl(tbl, country, yr, sce);
+  const lbl = document.getElementById(`${country}-${yr}-tbl-lbl`);
+  if (lbl) lbl.textContent = `Monthly LNG by sector — ${country.charAt(0).toUpperCase()+country.slice(1)} ${yr==='26'?2026:2027} ${sce} case (mmt)`;
+  updateMetrics(country, yr, sce);
+}
+
+// ── SCENARIO INIT ─────────────────────────────────────────────────
+function initScenario() {
+  // Build all scenario line charts, stacks, tables, metrics
+  ['india','japan','korea'].forEach(country => {
+    ['26','27'].forEach(yr => {
+      buildLineChart(`${country}-${yr}-line`, country, yr);
+      const tbl26 = document.getElementById(`${country}-tbl${yr}`);
+      if (tbl26 && !tbl26.hasChildNodes()) buildSectTbl(tbl26, country, yr, 'bull');
+      const ctbl26 = document.getElementById(`${country}-ctbl${yr}`);
+      if (ctbl26 && !ctbl26.hasChildNodes()) buildCompTbl(ctbl26, country, yr);
+      updateMetrics(country, yr, 'bull');
+    });
+    // stack charts only for india-26 and korea-26
+    buildSectStackChart(`${country}-26-stack`, country, '26', 'base');
+  });
+}
+
+initScenario();
+</script>
+</body>
+</html>
