@@ -376,6 +376,32 @@ body::before {
   transform: translateX(-50%) translateY(0) scale(1);
 }
 
+/* ── Bottom row: open the preview ABOVE the card ──
+   .tool-grid clips its overflow, so a preview opening below the last
+   row would be cut off. The last two cards (one row in the 2-column
+   grid) flip upward instead. */
+.tool-card:nth-last-child(-n+2) .preview-tip {
+  top: auto;
+  bottom: calc(100% + 14px);
+  transform: translateX(-50%) translateY(6px) scale(0.96);
+}
+
+.tool-card:nth-last-child(-n+2) .preview-tip::before {
+  top: auto;
+  bottom: -8px;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.tool-card:nth-last-child(-n+2) .preview-tip::after {
+  top: auto;
+  bottom: -7px;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.tool-card:nth-last-child(-n+2):hover .preview-tip {
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
 /* Keep preview inside viewport edges */
 
 .preview-tip img {
@@ -659,6 +685,7 @@ body::before {
 .tool-card:nth-child(3) { animation: fadeUp 0.45s 0.36s ease both; }
 .tool-card:nth-child(4) { animation: fadeUp 0.45s 0.44s ease both; }
 .tool-card:nth-child(5) { animation: fadeUp 0.45s 0.52s ease both; }
+.tool-card:nth-child(6) { animation: fadeUp 0.45s 0.60s ease both; }
 
 
 /* ══════════════════════════════════════════
